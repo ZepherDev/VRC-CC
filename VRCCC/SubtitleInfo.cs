@@ -53,7 +53,6 @@
             public string SubAutoTranslation { get; set; }
             public string SubForeignPartsOnly { get; set; }
             public string SubFromTrusted { get; set; }
-            public SubtitlesApi.QueryParameters QueryParameters { get; set; }
             public string SubTSGroupHash { get; set; }
             public string SubDownloadLink { get; set; }
             public string ZipDownloadLink { get; set; }
