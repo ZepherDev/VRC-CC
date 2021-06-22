@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using MelonLoader;
 using UnityEngine.Video;
 using Object = UnityEngine.Object;
@@ -19,12 +20,16 @@ namespace VRCCC
         async void VideoPlayerStarted(VideoPlayer source)
         {
             var uri = new VideoUri(source.url);
-            MelonLogger.Msg(uri.GetFileName());
             var titles = await SubtitlesApi.QuerySubtitles(uri.GetFileName());
-            foreach (var title in titles)
+            if (titles.Count == 0)
             {
-                MelonLogger.Msg(title.SubDownloadLink);
+                MelonLogger.Msg("Failed to find movie");
+                return;
             }
+            var bestMatch = titles.FirstOrDefault(title => title.LanguageName == "English" && title.SubHearingImpaired == "1") ??
+                            titles.First(title => title.LanguageName == "English");
+            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired == "1"}");
+            
         }
     }
 }

@@ -80,17 +80,15 @@ namespace VRCCC
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("User-Agent", "VRChatClosedCaptions");
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var request = await client.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName);
+            var request = await client.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName.ToLower());
+            var response = await request.Content.ReadAsStringAsync();
             try
             {
-                var deserialized =
-                    JsonConvert.DeserializeObject<List<SubtitleInfo>>(await request.Content.ReadAsStringAsync());
-                return deserialized;
+                return JsonConvert.DeserializeObject<List<SubtitleInfo>>(response);
             }
             catch
             {
-                MelonLogger.Msg(await request.Content.ReadAsStringAsync());
+                MelonLogger.Msg("Failed to deserialize result string. API Returned: "+await request.Content.ReadAsStringAsync());
                 return new List<SubtitleInfo>();
             }
         }
