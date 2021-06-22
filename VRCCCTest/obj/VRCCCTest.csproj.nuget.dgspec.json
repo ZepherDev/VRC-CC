@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "restore": {
+    "D:\\git\\VRC-CC\\VRCCCTest\\VRCCCTest.csproj": {}
+  },
+  "projects": {
+    "D:\\git\\VRC-CC\\VRCCCTest\\VRCCCTest.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\git\\VRC-CC\\VRCCCTest\\VRCCCTest.csproj",
+        "projectName": "VRCCCTest",
+        "projectPath": "D:\\git\\VRC-CC\\VRCCCTest\\VRCCCTest.csproj",
+        "packagesPath": "C:\\Users\\dan\\.nuget\\packages\\",
+        "outputPath": "D:\\git\\VRC-CC\\VRCCCTest\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\dan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "targetAlias": "net472",
+            "projectReferences": {
+              "D:\\git\\VRC-CC\\VRCCC\\VRCCC.csproj": {
+                "projectPath": "D:\\git\\VRC-CC\\VRCCC\\VRCCC.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "targetAlias": "net472",
+          "dependencies": {
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[16.5.0, )"
+            },
+            "NUnit": {
+              "target": "Package",
+              "version": "[3.12.0, )"
+            },
+            "NUnit3TestAdapter": {
+              "target": "Package",
+              "version": "[3.16.1, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Users\\dan\\.dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\git\\VRC-CC\\VRCCC\\VRCCC.csproj": {
+      "restore": {
+        "projectUniqueName": "D:\\git\\VRC-CC\\VRCCC\\VRCCC.csproj",
+        "projectName": "VRCCC",
+        "projectPath": "D:\\git\\VRC-CC\\VRCCC\\VRCCC.csproj"
+      },
+      "frameworks": {
+        "net472": {}
+      }
+    }
+  }
+}
