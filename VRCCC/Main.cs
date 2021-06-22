@@ -29,9 +29,9 @@ namespace VRCCC
                 MelonLogger.Msg("Failed to find movie");
                 return;
             }
-            var bestMatch = titles.FirstOrDefault(title => title.LanguageName == "English" && title.SubHearingImpaired == "1") ??
+            var bestMatch = titles.FirstOrDefault(title => title.LanguageName == "English" && title.SubHearingImpaired) ??
                             titles.First(title => title.LanguageName == "English");
-            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired == "1"}");
+            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired}");
             
         }
         

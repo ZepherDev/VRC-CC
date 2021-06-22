@@ -3,53 +3,36 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using MelonLoader;
 using Newtonsoft.Json;
-using UnityEngine;
 
 namespace VRCCC {
-    public class IMelonLogger { 
-        
-        
-    }
-    
-    public class SubtitlesApi {
-        private const string USER_AGENT = "VRChatClosedCaptions 1.0";
+    public static class SubtitlesApi {
+        private static readonly HttpClient WebClient = new HttpClient{DefaultRequestHeaders = {{"User-Agent", "TemporaryUserAgent"}}};
         private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
-        private readonly MelonLogger _melonLogger;
         
-        private Dictionary<string, MemoryStream> cachedSRTs = new Dictionary<string, MemoryStream>();
-        public class QueryParameters {
-            public string query { get; set; }
-        }
-        
-        public SubtitlesApi() { 
-            
-        } 
+        private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
 
-        public static async Task<List<SubtitleInfo>> QuerySubtitles(string movieName) {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("User-Agent", USER_AGENT);
+        public static async Task<List<Subtitle>> QuerySubtitles(string movieName) {
             var request = await 
-                client.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName.ToLower());
+                WebClient.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName.ToLower());
             var response = await request.Content.ReadAsStringAsync();
             try { 
-                return JsonConvert.DeserializeObject<List<SubtitleInfo>>(response);
+                return JsonConvert.DeserializeObject<List<Subtitle>>(response);
             } catch {
                 MelonLogger.Msg("Failed to deserialize result string. API Returned: "
                                 +await request.Content.ReadAsStringAsync());
-                return new List<SubtitleInfo>();
+                return new List<Subtitle>();
             }
         }
         
-        private MemoryStream GetSubIfCached(string subtitleURL) {
+        private static MemoryStream GetSubIfCached(string subtitleURL) {
             MemoryStream ms = null;
            
-            if (cachedSRTs.ContainsKey(subtitleURL)) 
-                ms = cachedSRTs[subtitleURL];
+            if (CachedSRTs.ContainsKey(subtitleURL)) 
+                ms = CachedSRTs[subtitleURL];
             
             return ms;
         }
@@ -61,7 +44,7 @@ namespace VRCCC {
          * <param name="srtString">The SRT string to check</param>
          * <returns>A bool indicating a valid or invalid SRT string</returns>
          */
-        private bool VerifySrt(string srtString) { 
+        private static bool VerifySrt(string srtString) { 
             bool isValid = false;
             
             // TODO: implement properly
@@ -71,18 +54,16 @@ namespace VRCCC {
             return isValid;
         }
         
-        public async Task<string> FetchSub(string subtitleURL) {
+        public static async Task<string> FetchSub(string subtitleURL) {
             MemoryStream compressedMs = GetSubIfCached(subtitleURL);
             string srtString = "";
             
             if (compressedMs == null) {
-                HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent", USER_AGENT);
-                HttpResponseMessage request = await client.GetAsync(subtitleURL);
+                HttpResponseMessage request = await WebClient.GetAsync(subtitleURL);
                 byte[] response = await request.Content.ReadAsByteArrayAsync();
                 try {
                     compressedMs = new MemoryStream(response);
-                    this.cachedSRTs[subtitleURL] = compressedMs;
+                    CachedSRTs[subtitleURL] = compressedMs;
                 } catch (Exception e) {
                     MelonLogger.Error("An exception occurred while trying to fetch or decode a subtitle file! " + e);
                 }
@@ -104,7 +85,7 @@ namespace VRCCC {
                 srtString = "";
             } else {
                 compressedMs.Seek(0,0);
-                this.cachedSRTs[subtitleURL] = compressedMs;
+                CachedSRTs[subtitleURL] = compressedMs;
             }
             return srtString;
         }

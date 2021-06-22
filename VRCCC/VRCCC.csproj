@@ -101,6 +101,7 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Main.cs" />
+        <Compile Include="Subtitle.cs" />
         <Compile Include="SubtitlesApi.cs" />
         <Compile Include="VideoUri.cs" />
     </ItemGroup>
