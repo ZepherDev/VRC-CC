@@ -11,14 +11,24 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 namespace VRCCC {
-    public class SubtitlesApi {
-        private const String USER_AGENT = "VRChatClosedCaptions 1.0";
-        private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
+    public class IMelonLogger { 
         
-        private Dictionary<String, MemoryStream> cachedSRTs = new Dictionary<string, MemoryStream>();
+        
+    }
+    
+    public class SubtitlesApi {
+        private const string USER_AGENT = "VRChatClosedCaptions 1.0";
+        private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
+        private readonly MelonLogger _melonLogger;
+        
+        private Dictionary<string, MemoryStream> cachedSRTs = new Dictionary<string, MemoryStream>();
         public class QueryParameters {
             public string query { get; set; }
         }
+        
+        public SubtitlesApi() { 
+            
+        } 
 
         public static async Task<List<SubtitleInfo>> QuerySubtitles(string movieName) {
             var client = new HttpClient();
@@ -35,7 +45,7 @@ namespace VRCCC {
             }
         }
         
-        private MemoryStream GetSubIfCached(String subtitleURL) {
+        private MemoryStream GetSubIfCached(string subtitleURL) {
             MemoryStream ms = null;
            
             if (cachedSRTs.ContainsKey(subtitleURL)) 
@@ -45,14 +55,14 @@ namespace VRCCC {
         }
         
         /**
-         * <summary>Given a String that's suspected to contain valid SRT data, returns true or false if it's
+         * <summary>Given a string that's suspected to contain valid SRT data, returns true or false if it's
          * valid/invalid</summary>
          *
-         * <param name="srtString">The SRT String to check</param>
-         * <returns>A Boolean indicating a valid or invalid SRT String</returns>
+         * <param name="srtString">The SRT string to check</param>
+         * <returns>A bool indicating a valid or invalid SRT string</returns>
          */
-        private Boolean verifySrt(String srtString) { 
-            Boolean isValid = false;
+        private bool VerifySrt(string srtString) { 
+            bool isValid = false;
             
             // TODO: implement properly
             if (srtString.Length > 512) 
@@ -61,9 +71,9 @@ namespace VRCCC {
             return isValid;
         }
         
-        public async Task<String> FetchSub(String subtitleURL) {
+        public async Task<string> FetchSub(string subtitleURL) {
             MemoryStream compressedMs = GetSubIfCached(subtitleURL);
-            String srtString = "";
+            string srtString = "";
             
             if (compressedMs == null) {
                 HttpClient client = new HttpClient();
@@ -76,26 +86,25 @@ namespace VRCCC {
                 } catch (Exception e) {
                     MelonLogger.Error("An exception occurred while trying to fetch or decode a subtitle file! " + e);
                 }
-            } else {
-                compressedMs.Seek(0,0);
-                try {
-                    var decompressedMs = new MemoryStream();
-                    var gzs = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), 
-                        BUFFER_SIZE_BYTES);
-                    gzs.CopyTo(decompressedMs);
-                    srtString = Encoding.UTF8.GetString(decompressedMs.ToArray());
-                } catch (Exception e) { 
-                    MelonLogger.Error("An exception occurred while trying to decompress, decode, or verify an " +
-                                      "encoded subtitle file! " + e);
-                }
             }
-            if (!verifySrt(srtString)) { 
+            compressedMs.Seek(0,0);
+            try {
+                var decompressedMs = new MemoryStream();
+                var gzs = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), 
+                    BUFFER_SIZE_BYTES);
+                gzs.CopyTo(decompressedMs);
+                srtString = Encoding.UTF8.GetString(decompressedMs.ToArray());
+            } catch (Exception e) { 
+                MelonLogger.Error("An exception occurred while trying to decompress, decode, or verify an " +
+                                  "encoded subtitle file! " + e);
+            }
+            
+            if (!VerifySrt(srtString)) { 
                 MelonLogger.Error("Retrieved a subtitle file but it doesn't look like a valid SRT.");
                 srtString = "";
             } else {
                 compressedMs.Seek(0,0);
                 this.cachedSRTs[subtitleURL] = compressedMs;
-                Debug.logger.Log(LogType.Warning, "Cached some bytes");
             }
             return srtString;
         }
