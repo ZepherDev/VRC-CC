@@ -14,7 +14,10 @@ namespace VRCCC
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
             foreach (var player in Object.FindObjectsOfType<VideoPlayer>())
+            {
                 player.add_started(new Action<VideoPlayer>(VideoPlayerStarted));
+                player.add_seekCompleted(new Action<VideoPlayer>(VideoPlayerSeekCompleted));
+            }
         }
         
         async void VideoPlayerStarted(VideoPlayer source)
@@ -31,5 +34,10 @@ namespace VRCCC
             MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired == "1"}");
             
         }
+        
+        async void VideoPlayerSeekCompleted(VideoPlayer source) 
+        {
+            
+        } 
     }
 }

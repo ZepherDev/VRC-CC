@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using MelonLoader;
 using Newtonsoft.Json;
@@ -9,6 +13,7 @@ namespace VRCCC
 {
     public class SubtitlesApi
     {
+        private const String USER_AGENT = "VRChatClosedCaptions 1.0";
         public class QueryParameters
         {
             public string query { get; set; }
@@ -79,7 +84,7 @@ namespace VRCCC
         public static async Task<List<SubtitleInfo>> QuerySubtitles(string movieName)
         {
             var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("User-Agent", "VRChatClosedCaptions");
+            client.DefaultRequestHeaders.Add("User-Agent", USER_AGENT);
             var request = await client.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName.ToLower());
             var response = await request.Content.ReadAsStringAsync();
             try
@@ -91,6 +96,29 @@ namespace VRCCC
                 MelonLogger.Msg("Failed to deserialize result string. API Returned: "+await request.Content.ReadAsStringAsync());
                 return new List<SubtitleInfo>();
             }
+        }
+        
+        public static async Task<String> FetchSub(String subtitleURL) 
+        { 
+            var BUFFER_SIZE = 1024*1024; // 1MB
+            String srtString = "";
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("User-Agent", USER_AGENT);
+            var request = await client.GetAsync(subtitleURL);
+            var response = await request.Content.ReadAsByteArrayAsync();
+            try 
+            {
+                var compressedMs = new MemoryStream(response);
+                var decompressedMs = new MemoryStream();
+                var gzs = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), BUFFER_SIZE);
+                gzs.CopyTo(decompressedMs);
+                srtString = Encoding.UTF8.GetString(decompressedMs.ToArray());
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("An exception occurred while trying to fetch or decode a subtitle file! " + e);
+            }
+            return srtString;
         }
     }
 }
