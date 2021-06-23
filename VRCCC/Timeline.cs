@@ -52,7 +52,11 @@ namespace VRCCC
         private long _lastTick = 0;
         private long _playOffset = 0;
         private int _lastIndex = -1;
-        List<TimelineEvent> listOfEvents = new List<TimelineEvent>();
+        private List<TimelineEvent> listOfEvents = new List<TimelineEvent>();
+        
+        public Timeline(List<TimelineEvent> listOfEvents) { 
+            this.listOfEvents = listOfEvents;
+        }
         
         /**
          * <summary>Returns a list of TimelineEvents that occurred between the last position in the timeline and
@@ -68,7 +72,9 @@ namespace VRCCC
             
             for (int i=_lastIndex+1; i < listOfEvents.Count-1; ++i) { 
                 if (currentElapsedTimeMS >= listOfEvents[i].time) { 
-                    events.Append(listOfEvents[i]);
+                    events.Add(listOfEvents[i]);
+                } else {
+                    break;
                 }
                 _lastIndex = i;
             }
@@ -160,13 +166,15 @@ namespace VRCCC
                         if (line.Trim() == "") { 
                             te = new TimelineEvent(TimelineEvent.EVENT_TYPE.CC_START, content,
                                 card_num, start_time);
-                            events.Append(te);
+                            events.Add(te);
                             
                             te = new TimelineEvent(TimelineEvent.EVENT_TYPE.CC_END, "",
                                 card_num, end_time);
-                            events.Append(te);
+                            events.Add(te);
+                            state = States.CARD_NUM;
+                            content = "";
                         } else { 
-                            content += line;
+                            content += '\n' + line;
                         }
                         break;
                     default:

@@ -10,7 +10,8 @@ using Newtonsoft.Json;
 
 namespace VRCCC {
     public static class SubtitlesApi {
-        private static readonly HttpClient WebClient = new HttpClient{DefaultRequestHeaders = {{"User-Agent", "TemporaryUserAgent"}}};
+        private static readonly HttpClient WebClient = new HttpClient{DefaultRequestHeaders = {{"User-Agent", 
+            "TemporaryUserAgent"}}};
         private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
         
         private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
