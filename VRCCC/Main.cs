@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using MelonLoader;
+using UnityEngine;
 using UnityEngine.Video;
 using Object = UnityEngine.Object;
 
@@ -19,7 +20,7 @@ namespace VRCCC
                 player.add_seekCompleted(new Action<VideoPlayer>(VideoPlayerSeekCompleted));
             }
         }
-        
+
         async void VideoPlayerStarted(VideoPlayer source)
         {
             var uri = new VideoUri(source.url);

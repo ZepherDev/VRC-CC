@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using Newtonsoft.Json;
 
 namespace VRCCC
 {
+    [SuppressMessage("ReSharper", "UnassignedField.Global")]    // Shaddap, Rider
     public class Subtitle
     {
         public string LanguageName;
