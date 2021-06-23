@@ -20,8 +20,7 @@ namespace VRCCCTest
         [Test]
         public async Task TestFetch()
         {
-            SubtitlesApi api = new SubtitlesApi();
-            var result = await api.FetchSub("https://dl.opensubtitles.org/en/download/src-api/vrf-19a80c53/filead/1955211963.gz");
+            var result = await FetchSub("https://dl.opensubtitles.org/en/download/src-api/vrf-19a80c53/filead/1955211963.gz");
             Console.WriteLine(result);
             Assert.True(result.Length > 512);
         }
