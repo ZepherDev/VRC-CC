@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using MelonLoader;
+using UnityEngine;
 using UnityEngine.Video;
 using Object = UnityEngine.Object;
 
@@ -14,9 +15,12 @@ namespace VRCCC
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
             foreach (var player in Object.FindObjectsOfType<VideoPlayer>())
+            {
                 player.add_started(new Action<VideoPlayer>(VideoPlayerStarted));
+                player.add_seekCompleted(new Action<VideoPlayer>(VideoPlayerSeekCompleted));
+            }
         }
-        
+
         async void VideoPlayerStarted(VideoPlayer source)
         {
             var uri = new VideoUri(source.url);
@@ -26,10 +30,15 @@ namespace VRCCC
                 MelonLogger.Msg("Failed to find movie");
                 return;
             }
-            var bestMatch = titles.FirstOrDefault(title => title.LanguageName == "English" && title.SubHearingImpaired == "1") ??
+            var bestMatch = titles.FirstOrDefault(title => title.LanguageName == "English" && title.SubHearingImpaired) ??
                             titles.First(title => title.LanguageName == "English");
-            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired == "1"}");
+            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired}");
             
         }
+        
+        async void VideoPlayerSeekCompleted(VideoPlayer source) 
+        {
+            
+        } 
     }
 }
