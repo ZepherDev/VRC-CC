@@ -7,16 +7,22 @@ namespace VRCCC
 {
     public static class SRTDecoder 
     {
-        private static List<TimelineError> _errors;
-        
-        public static List<TimelineError> GETErrorsEncounteredDuringDecoding() { 
-                return _errors;
-        }
-
         private enum States : ushort { 
             CARD_NUM,
             TIMECODE,
             CONTENT,
+        }
+        
+        private static List<TimelineError> _errors;
+        
+        /**
+         * <summary>Returns a List of TimelineErrors (if any) encountered on the previous decoding call.
+         * Each TimelineError may contain more information in `additionalInfo`.</summary>
+         * 
+         * <returns>The List of TimelineError Objects</returns>
+         */
+        public static List<TimelineError> GETErrorsEncounteredDuringDecoding() { 
+                return _errors;
         }
         
         /**

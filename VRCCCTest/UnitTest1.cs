@@ -35,7 +35,7 @@ namespace VRCCCTest
             Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resources[0]);
             StreamReader reader = new StreamReader(stream);
             string srtString = reader.ReadToEnd();
-            List<TimelineEvent> events = SRTDecoder.DecodeSRTIntoTimelineEvents(srtString);
+            List<TimelineEvent> events = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
             Timeline tl = new Timeline(events);
             
             StreamWriter outFile = new StreamWriter("output.txt", append: true);
@@ -46,7 +46,7 @@ namespace VRCCCTest
                 foreach (TimelineEvent ccEvent in events) { 
                     if (ccEvent.type == TimelineEvent.EVENT_TYPE.CC_START) { 
                         outFile.WriteLine("***");
-                        outFile.WriteLine(ccEvent.event_text);
+                        outFile.WriteLine(ccEvent.eventText);
                         outFile.Flush();
                     } else if (ccEvent.type == TimelineEvent.EVENT_TYPE.CC_END) { 
                         outFile.WriteLine("\n\n\n\n\n\n");    
