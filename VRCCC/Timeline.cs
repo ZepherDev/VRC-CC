@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEngine.Assertions;
 
 namespace VRCCC
@@ -70,13 +67,13 @@ namespace VRCCC
             List<TimelineEvent> events = new List<TimelineEvent>();
             _lastTick = currentElapsedTimeMS;
             
-            for (int i=_lastIndex+1; i < listOfEvents.Count-1; ++i) { 
+            for (int i=_lastIndex+1; i < listOfEvents.Count-1; i++) { 
                 if (currentElapsedTimeMS >= listOfEvents[i].time) { 
                     events.Add(listOfEvents[i]);
+                    _lastIndex = i;
                 } else {
                     break;
                 }
-                _lastIndex = i;
             }
             return events;
         }
@@ -88,100 +85,5 @@ namespace VRCCC
         }
         
     }
-    
-    public class TimelineEvent 
-    { 
-        public enum EVENT_TYPE : ushort {
-            SPEECH_DISPLAY,
-            SPEECH_HIDE, 
-            DESC_DISPLAY,
-            DESC_HIDE,
-            ALL_HIDE,
-            CC_START,
-            CC_END,
-        }
 
-        public TimelineEvent(EVENT_TYPE type, string eventText, int subNumber, long time)
-        {
-            this.type = type;
-            this.event_text = eventText;
-            this.sub_number = subNumber;
-            this.time = time;
-        }
-
-        public long time;
-        public EVENT_TYPE type;
-        public string event_text;
-        public int sub_number;
-    }
-    
-    public static class SRTDecoder 
-    {
-        private enum States : ushort { 
-            CARD_NUM,
-            TIMECODE,
-            CONTENT,
-        }
-        
-        public static List<TimelineEvent> DecodeSRTIntoTimelineEvents(String SRTString) {
-            List<TimelineEvent> events = new List<TimelineEvent>();
-            
-            StringReader sr = new StringReader(SRTString);
-            States state = States.CARD_NUM; 
-            string line = "";
-            int card_num = 0;
-            long start_time = 0;
-            long end_time = 0;
-            string content = "";
-            TimelineEvent te = null;
-            Regex timecode_regex = new Regex(@"^([\d:,\.]+) --> ([\d:,\.]+)$");
-                                            // 00:00:06,000 --> 00:00:12.074
-            Regex timeformat_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)[,\.](\d\d\d)$");
-                                            // 00:00:06,000 
-                                            // HH:MM:SS,sss
-            
-            while ((line = sr.ReadLine()) != null) { 
-                switch (state) { 
-                    case States.CARD_NUM: 
-                        int.TryParse(line.Trim(), out card_num);
-                        state = States.TIMECODE;
-                        break;
-                    case States.TIMECODE:
-                        Match match = timecode_regex.Match(line);
-                        Match match2 = timeformat_regex.Match(match.Groups[1].Value);
-                        start_time = int.Parse(match2.Groups[1].Value) * 60 * 60 * 1000;
-                        start_time += int.Parse(match2.Groups[2].Value) * 60 * 1000;
-                        start_time += int.Parse(match2.Groups[3].Value) * 1000;
-                        start_time += int.Parse(match2.Groups[4].Value);
-                        
-                        match2 = timeformat_regex.Match(match.Groups[2].Value);
-                        end_time = int.Parse(match2.Groups[1].Value) * 60 * 60 * 1000;
-                        end_time += int.Parse(match2.Groups[2].Value) * 60 * 1000;
-                        end_time += int.Parse(match2.Groups[3].Value) * 1000;
-                        end_time += int.Parse(match2.Groups[4].Value);
-                        
-                        state = States.CONTENT;
-                        break;
-                    case States.CONTENT:
-                        if (line.Trim() == "") { 
-                            te = new TimelineEvent(TimelineEvent.EVENT_TYPE.CC_START, content,
-                                card_num, start_time);
-                            events.Add(te);
-                            
-                            te = new TimelineEvent(TimelineEvent.EVENT_TYPE.CC_END, "",
-                                card_num, end_time);
-                            events.Add(te);
-                            state = States.CARD_NUM;
-                            content = "";
-                        } else { 
-                            content += '\n' + line;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return events;
-        }
-    } 
 }
