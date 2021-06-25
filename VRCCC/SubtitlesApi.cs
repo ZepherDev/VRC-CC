@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MelonLoader;
 using Newtonsoft.Json;
+using UnityEngine.UI;
 
 namespace VRCCC {
     public static class SubtitlesApi {
@@ -16,9 +17,12 @@ namespace VRCCC {
         
         private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
 
-        public static async Task<List<Subtitle>> QuerySubtitles(string movieName) {
+        public static async Task<List<Subtitle>> QuerySubtitles(string movieName, long fileSize = 0)
+        {
+            var url = "https://rest.opensubtitles.org/search/query-" + movieName.ToLower();
+            if (fileSize > 0) url += "/moviebytesize-" + fileSize;
             var request = await 
-                WebClient.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName.ToLower());
+                WebClient.GetAsync(url);
             var response = await request.Content.ReadAsStringAsync();
             try { 
                 return JsonConvert.DeserializeObject<List<Subtitle>>(response);
@@ -89,6 +93,12 @@ namespace VRCCC {
                 CachedSRTs[subtitleURL] = compressedMs;
             }
             return srtString;
+        }
+
+        public static async Task<long?> GetFileSize(string url)
+        {
+            var webResult = await WebClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            return webResult.Content.Headers.ContentLength;
         }
     }
 }

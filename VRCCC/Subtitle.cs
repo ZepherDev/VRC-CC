@@ -11,5 +11,7 @@ namespace VRCCC
         [JsonIgnore] public bool SubHearingImpaired => _subHearingImpaired == "1";
         public string SubDownloadLink;
         public double Score;
+        [JsonProperty("MovieByteSize")] private string _movieByteSize;
+        [JsonIgnore] public int MovieByteSize => int.Parse(_movieByteSize);
     }
 }
