@@ -30,6 +30,7 @@
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=3.7.1.6, Culture=neutral, PublicKeyToken=null">
@@ -103,11 +104,13 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Hooks.cs" />
         <Compile Include="Main.cs" />
         <Compile Include="SubtitleInfo.cs" />
         <Compile Include="Subtitle.cs" />
         <Compile Include="SubtitlesApi.cs" />
         <Compile Include="Timeline.cs" />
+        <Compile Include="TrackedPlayer.cs" />
         <Compile Include="UITextArea.cs" />
         <Compile Include="VideoUri.cs" />
     </ItemGroup>
