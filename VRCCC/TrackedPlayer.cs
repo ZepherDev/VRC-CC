@@ -83,7 +83,7 @@ namespace VRCCC
             }
             MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired}");
             var subFile = await SubtitlesApi.FetchSub(bestMatch.SubDownloadLink);
-            return subFile.Length < 512 ? null : SRTDecoder.DecodeSRTIntoTimelineEvents(subFile);
+            return subFile.Length < 512 ? null : SRTDecoder.DecodeSrtIntoTimelineEvents(subFile);
         } 
 
         private IEnumerator UpdateSubtitles()
@@ -94,8 +94,8 @@ namespace VRCCC
                 {
                     foreach (var eventObj in _tl.ScrubToTime(CurrentTimeInMs))
                     {
-                        MelonLogger.Msg(eventObj.event_text);
-                        UITextArea.Text = eventObj.event_text;
+                        MelonLogger.Msg(eventObj.eventText);
+                        UITextArea.Text = eventObj.eventText;
                     }
                 }
 
