@@ -23,6 +23,7 @@ namespace VRCCC
 
         private string _url;
         private PlayerState _currentState;
+        private long _msOffset = 0;
 
         private long CurrentTimeInMs => (long) Math.Round(_storedPlayer.time, 2)*1000;
         private Timeline _tl;
@@ -39,6 +40,27 @@ namespace VRCCC
             if (player.isPlaying) state = PlayerState.Play;
             if (player.isPaused) state = PlayerState.Pause;
             return state;
+        }
+        
+        /**
+         * <summary>Display of the subtitles can be offset by some number of ms, to account for differences between
+         * the content the closed caption file is encoded for, and the actual content being viewed. This function
+         * retrieves the current offset (initially 0ms).</summary>
+         * <returns>The current offset in ms</returns>
+         */
+        public long getCurrentOffsetMs() 
+        { 
+            return _msOffset;
+        }
+        
+        /**
+         * <summary>Increments (or decrements) the current offset by `ms` milliseconds.</summary>
+         * <param nmae="ms">A signed long indicating the number of ms to change the offset by. Set to negative to
+         * decrement the offset.</param>
+         */
+        public void incrementOrDecrementOffset(long ms) 
+        {
+            _msOffset += ms;
         }
 
         public async void OnStateChange(PlayerState newState)
@@ -92,7 +114,13 @@ namespace VRCCC
             {
                 if (_tl != null)
                 {
-                    foreach (var eventObj in _tl.ScrubToTime(CurrentTimeInMs))
+                    List<TimelineEvent> events = _tl.ScrubToTime(CurrentTimeInMs + _msOffset);
+                    // Large gaps in time (resync, lag, a big seek) can result in a massive list of missed events.
+                    // To prevent this, we only care about the two most recent events
+                    if (events.Count > 2) 
+                        events.RemoveRange(0, events.Count - 3);
+                    
+                    foreach (var eventObj in events)
                     {
                         MelonLogger.Msg(eventObj.eventText);
                         UITextArea.Text = eventObj.eventText;
