@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using UnityEngine.Assertions;
 
 namespace VRCCC
 {
@@ -66,7 +64,14 @@ namespace VRCCC
         public List<TimelineEvent> ScrubToTime(long currentElapsedTimeMS) { 
             List<TimelineEvent> events = new List<TimelineEvent>();
             _lastTick = currentElapsedTimeMS;
-            
+           
+            // If user jumped back, start the search from the beginning
+            if (_lastIndex >= 0 && currentElapsedTimeMS < listOfEvents[_lastIndex].time) { 
+                _lastIndex = -1;
+                // TODO: could be improved with a recursive function doing a binary search to find the event with the 
+                // closest timecode, then scrub back 1 
+            }
+           
             for (int i=_lastIndex+1; i < listOfEvents.Count-1; i++) { 
                 if (currentElapsedTimeMS >= listOfEvents[i].time) { 
                     events.Add(listOfEvents[i]);

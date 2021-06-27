@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using MelonLoader;
-using UnityEngine;
 using UnityEngine.Video;
 using Object = UnityEngine.Object;
 
@@ -12,33 +11,30 @@ namespace VRCCC
 {
     public class VRCCC : MelonMod
     {
-        public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+        public static readonly List<TrackedPlayer> TrackedPlayers = new List<TrackedPlayer>();
+        public static readonly List<Action> MainThreadExecutionQueue = new List<Action>();
+
+        public override void OnApplicationStart()
         {
-            foreach (var player in Object.FindObjectsOfType<VideoPlayer>())
-            {
-                player.add_started(new Action<VideoPlayer>(VideoPlayerStarted));
-                player.add_seekCompleted(new Action<VideoPlayer>(VideoPlayerSeekCompleted));
-            }
+            Hooks.SetupHooks(); 
         }
 
-        async void VideoPlayerStarted(VideoPlayer source)
+        public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
-            var uri = new VideoUri(source.url);
-            var titles = await SubtitlesApi.QuerySubtitles(uri.GetFileName());
-            if (titles.Count == 0)
-            {
-                MelonLogger.Msg("Failed to find movie");
-                return;
-            }
-            var bestMatch = titles.FirstOrDefault(title => title.LanguageName == "English" && title.SubHearingImpaired) ??
-                            titles.First(title => title.LanguageName == "English");
-            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired}");
+            foreach (var lingeringPlayer in TrackedPlayers)
+                lingeringPlayer.Dispose();
+            TrackedPlayers.Clear();
             
+            foreach (var discoveredPlayer in Object.FindObjectsOfType<VideoPlayer>())
+                TrackedPlayers.Add(new TrackedPlayer(discoveredPlayer));
         }
-        
-        async void VideoPlayerSeekCompleted(VideoPlayer source) 
+
+        public override void OnUpdate()
         {
+            if (MainThreadExecutionQueue.Count == 0) return;
             
-        } 
+            foreach (var execution in MainThreadExecutionQueue) execution.Invoke();
+            MainThreadExecutionQueue.Clear();
+        }
     }
 }

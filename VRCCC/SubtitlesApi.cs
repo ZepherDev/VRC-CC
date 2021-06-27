@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -11,21 +12,29 @@ using Newtonsoft.Json;
 namespace VRCCC {
     public static class SubtitlesApi {
         private static readonly HttpClient WebClient = new HttpClient{DefaultRequestHeaders = {{"User-Agent", 
-            "TemporaryUserAgent"}}};
+            "VRC-CC"}}};
         private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
         
         private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
 
-        public static async Task<List<Subtitle>> QuerySubtitles(string movieName) {
+        public static async Task<Subtitle?> QuerySubtitles(string movieName)
+        {
+            MelonLogger.Msg($"Requesting {movieName}");
+            var requestData = new HttpRequestMessage()
+            {
+                RequestUri = new Uri("https://8m9ahcccna.execute-api.us-east-1.amazonaws.com/prod"),
+                Method = HttpMethod.Get
+            };
+            requestData.Headers.Add("movie", movieName);
             var request = await 
-                WebClient.GetAsync("https://rest.opensubtitles.org/search/query-"+movieName.ToLower());
-            var response = await request.Content.ReadAsStringAsync();
-            try { 
-                return JsonConvert.DeserializeObject<List<Subtitle>>(response);
+                WebClient.SendAsync(requestData);
+            try {
+                if (!request.IsSuccessStatusCode) return null;
+                var response = await request.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<Subtitle>(response);
             } catch {
-                MelonLogger.Msg("Failed to deserialize result string. API Returned: "
-                                +await request.Content.ReadAsStringAsync());
-                return new List<Subtitle>();
+                MelonLogger.Msg("Failed to deserialize result string.");
+                return null;
             }
         }
         
@@ -56,7 +65,7 @@ namespace VRCCC {
         }
         
         public static async Task<string> FetchSub(string subtitleURL) {
-            MemoryStream compressedMs = GetSubIfCached(subtitleURL);
+            var compressedMs = GetSubIfCached(subtitleURL);
             string srtString = "";
             
             if (compressedMs == null) {
@@ -89,6 +98,12 @@ namespace VRCCC {
                 CachedSRTs[subtitleURL] = compressedMs;
             }
             return srtString;
+        }
+
+        public static async Task<long?> GetFileSize(string url)
+        {
+            var webResult = await WebClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            return webResult.Content.Headers.ContentLength;
         }
     }
 }

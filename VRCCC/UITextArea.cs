@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using MelonLoader;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace VRCCC
@@ -11,6 +13,7 @@ namespace VRCCC
     public static class UITextArea
     {
         private static readonly Text TextComponent;
+        private static readonly Transform TextParent;
 
         public static string Text
         {
@@ -26,14 +29,27 @@ namespace VRCCC
         {
             // Hippity Hoppity, your UI elements are now my property
             var baseUserInterface = GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud").transform;
-            var newText = Object.Instantiate(baseUserInterface.FindChild("AlertTextParent"), baseUserInterface); 
+            TextParent = Object.Instantiate(baseUserInterface.FindChild("AlertTextParent"), baseUserInterface); 
             
-            newText.name = "VRCCC Text";
-            newText.localPosition = new Vector3(0, -350, 0);
-            TextComponent = newText.FindChild("Text").GetComponent<Text>();
+            TextParent.name = "VRCCC Text";
+            TextParent.localPosition = new Vector3(0, -350, 0);
+            TextComponent = TextParent.FindChild("Text").GetComponent<Text>();
+            TextComponent.supportRichText = true;
             
             //TODO: Perhaps scale the font size depending on how much text is being rendered
             TextComponent.fontSize = 25;
         }
+
+        public static IEnumerator DisplayAlert(string text, float timeInSeconds)
+        {
+            MelonLogger.Msg(text);
+            Text = text;
+            ToggleUI(true);
+            yield return new WaitForSeconds(timeInSeconds);
+            ToggleUI(false);
+            Text = "";
+        }
+        
+        public static void ToggleUI(bool newShownState) => TextParent.gameObject.SetActive(newShownState);
     }
 }
