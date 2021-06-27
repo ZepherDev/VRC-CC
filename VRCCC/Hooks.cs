@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 using Il2CppSystem;
 using MelonLoader;
-using UnhollowerBaseLib;
 using UnityEngine.Video;
 using IntPtr = System.IntPtr;
 
@@ -45,30 +44,31 @@ namespace VRCCC
 
         private static void OnPlay(IntPtr instance)
         {
+            _onPlay.Invoke(instance);
             var foundPlayer = VRCCC.TrackedPlayers.Find(player => player.Equals(instance));
             foundPlayer?.OnStateChange(TrackedPlayer.PlayerState.Play);
-            _onPlay.Invoke(instance);
         }
         
         private static void OnPause(IntPtr instance)
         {
+            _onPause.Invoke(instance);
             var foundPlayer = VRCCC.TrackedPlayers.Find(player => player.Equals(instance));
             foundPlayer?.OnStateChange(TrackedPlayer.PlayerState.Pause);
-            _onPause.Invoke(instance);
         }
         
         private static void OnStop(IntPtr instance)
         {
+            _onStop.Invoke(instance);
             var foundPlayer = VRCCC.TrackedPlayers.Find(player => player.Equals(instance));
             foundPlayer?.OnStateChange(TrackedPlayer.PlayerState.Stop);
-            _onStop.Invoke(instance);
         }
         
         private static void OnSetURL(IntPtr instance, IntPtr newURL)
         {
+            _onSetURL.Invoke(instance, newURL);
+            if (newURL == Il2CppSystem.IntPtr.Zero) return;
             var foundPlayer = VRCCC.TrackedPlayers.Find(player => player.Equals(instance));
             foundPlayer?.OnURLChange(new String(newURL));
-            _onSetURL.Invoke(instance, newURL);
         }
     }
 }

@@ -28,9 +28,9 @@ namespace VRCCC {
             requestData.Headers.Add("movie", movieName);
             var request = await 
                 WebClient.SendAsync(requestData);
-            try { 
+            try {
+                if (!request.IsSuccessStatusCode) return null;
                 var response = await request.Content.ReadAsStringAsync();
-                if (response.Contains("Internal server error")) return null;
                 return JsonConvert.DeserializeObject<Subtitle>(response);
             } catch {
                 MelonLogger.Msg("Failed to deserialize result string.");

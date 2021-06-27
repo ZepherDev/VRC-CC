@@ -9,7 +9,7 @@ using UnityEngine.Video;
 
 namespace VRCCC
 {
-    public class TrackedPlayer
+    public class TrackedPlayer : IDisposable
     {
         public enum PlayerState
         {
@@ -21,13 +21,11 @@ namespace VRCCC
         private readonly VideoPlayer _storedPlayer;
         private object _coroutineToken;
 
-        private string _url;
         private PlayerState _currentState;
-        private long _msOffset = 0;
+        private long _msOffset;
 
         private long CurrentTimeInMs => (long) Math.Round(_storedPlayer.time, 2)*1000;
         private Timeline _tl;
-        private bool _needsNewTitles;
         
         public TrackedPlayer(VideoPlayer original)
         {
@@ -49,20 +47,14 @@ namespace VRCCC
          * retrieves the current offset (initially 0ms).</summary>
          * <returns>The current offset in ms</returns>
          */
-        public long getCurrentOffsetMs() 
-        { 
-            return _msOffset;
-        }
-        
+        public long GetCurrentOffsetMs() => _msOffset;
+
         /**
          * <summary>Increments (or decrements) the current offset by `ms` milliseconds.</summary>
          * <param nmae="ms">A signed long indicating the number of ms to change the offset by. Set to negative to
          * decrement the offset.</param>
          */
-        public void incrementOrDecrementOffset(long ms) 
-        {
-            _msOffset += ms;
-        }
+        public void IncrementOrDecrementOffset(long ms) => _msOffset += ms;
 
         public void OnStateChange(PlayerState newState)
         {
@@ -102,7 +94,7 @@ namespace VRCCC
 
         private IEnumerator UpdateSubtitles()
         {
-            while (true)
+            while (_storedPlayer != null)
             {
                 if (_tl != null && _currentState == PlayerState.Play)
                 {
@@ -130,5 +122,13 @@ namespace VRCCC
         }
 
         public bool Equals(IntPtr playerPtr) => playerPtr == _storedPlayer.Pointer;
+
+        ~TrackedPlayer() => Dispose();
+
+        public void Dispose()
+        {
+            UITextArea.Text = "";
+            if (_coroutineToken != null) MelonCoroutines.Stop(_coroutineToken);
+        }
     }
 }
