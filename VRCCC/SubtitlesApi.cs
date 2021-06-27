@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -7,29 +8,33 @@ using System.Text;
 using System.Threading.Tasks;
 using MelonLoader;
 using Newtonsoft.Json;
-using UnityEngine.UI;
 
 namespace VRCCC {
     public static class SubtitlesApi {
         private static readonly HttpClient WebClient = new HttpClient{DefaultRequestHeaders = {{"User-Agent", 
-            "TemporaryUserAgent"}}};
+            "VRC-CC"}}};
         private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
         
         private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
 
-        public static async Task<List<Subtitle>> QuerySubtitles(string movieName, long fileSize = 0)
+        public static async Task<Subtitle?> QuerySubtitles(string movieName)
         {
-            var url = "https://rest.opensubtitles.org/search/query-" + movieName.ToLower();
-            if (fileSize > 0) url += "/moviebytesize-" + fileSize;
+            MelonLogger.Msg($"Requesting {movieName}");
+            var requestData = new HttpRequestMessage()
+            {
+                RequestUri = new Uri("https://8m9ahcccna.execute-api.us-east-1.amazonaws.com/prod"),
+                Method = HttpMethod.Get
+            };
+            requestData.Headers.Add("movie", movieName);
             var request = await 
-                WebClient.GetAsync(url);
-            var response = await request.Content.ReadAsStringAsync();
+                WebClient.SendAsync(requestData);
             try { 
-                return JsonConvert.DeserializeObject<List<Subtitle>>(response);
+                var response = await request.Content.ReadAsStringAsync();
+                if (response.Contains("Internal server error")) return null;
+                return JsonConvert.DeserializeObject<Subtitle>(response);
             } catch {
-                MelonLogger.Msg("Failed to deserialize result string. API Returned: "
-                                +await request.Content.ReadAsStringAsync());
-                return new List<Subtitle>();
+                MelonLogger.Msg("Failed to deserialize result string.");
+                return null;
             }
         }
         
@@ -60,7 +65,7 @@ namespace VRCCC {
         }
         
         public static async Task<string> FetchSub(string subtitleURL) {
-            MemoryStream compressedMs = GetSubIfCached(subtitleURL);
+            var compressedMs = GetSubIfCached(subtitleURL);
             string srtString = "";
             
             if (compressedMs == null) {

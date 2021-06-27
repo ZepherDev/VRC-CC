@@ -27,6 +27,7 @@ namespace VRCCC
 
         private long CurrentTimeInMs => (long) Math.Round(_storedPlayer.time, 2)*1000;
         private Timeline _tl;
+        private bool _needsNewTitles;
         
         public TrackedPlayer(VideoPlayer original)
         {
@@ -63,68 +64,65 @@ namespace VRCCC
             _msOffset += ms;
         }
 
-        public async void OnStateChange(PlayerState newState)
+        public void OnStateChange(PlayerState newState)
         {
             _currentState = newState;
             if (_currentState == PlayerState.Play)
-            {
-                UITextArea.ToggleUI(true);
-                if (_url != _storedPlayer.url)
-                {
-                    _url = _storedPlayer.url;
-                    var contentLength = await SubtitlesApi.GetFileSize(_url);
-                    var newTitles = await FetchSubtitlesForNewUrl(_url, contentLength ?? 0);
-                    _tl = newTitles != null ? new Timeline(newTitles) : null;
-                }
                 _coroutineToken = MelonCoroutines.Start(UpdateSubtitles());
-            }
-            else if (_coroutineToken != null)
-            {
+            else if (_coroutineToken != null) 
                 MelonCoroutines.Stop(_coroutineToken);
-                UITextArea.ToggleUI(false);
-            }
         }
 
-        private static async Task<List<TimelineEvent>> FetchSubtitlesForNewUrl(string newUrl, long fileSize = 0)
+        public async void OnURLChange(string newURl)
         {
-            MelonLogger.Msg(fileSize);
+            var (movieName, timelineEvents) = await FetchSubtitlesForNewUrl(newURl);
+            if (timelineEvents == null)
+            {
+                _tl = null;
+                return;
+            }
+            
+            _tl = new Timeline(timelineEvents);
+            VRCCC.MainThreadExecutionQueue.Add(() => MelonCoroutines.Start(UITextArea.DisplayAlert($"Starting Subtitle Playback for: {movieName}", 3)));
+        }
+
+        private static async Task<(string, List<TimelineEvent>)> FetchSubtitlesForNewUrl(string newUrl)
+        {
             var uri = new VideoUri(newUrl);
-            var titles = await SubtitlesApi.QuerySubtitles(uri.GetFileName(), fileSize);
-            if (titles.Count == 0)
+            var title = await SubtitlesApi.QuerySubtitles(uri.GetFileName());
+            if (title == null)
             {
                 MelonLogger.Msg("Failed to find movie");
-                return null;
+                return ("", null);
             }
 
-            var sortedTitles = titles.OrderBy(x => Math.Abs(x.MovieByteSize - fileSize)).ToList();
-            var bestMatch = sortedTitles.FirstOrDefault(title => title.LanguageName == "English");
-            if (bestMatch == null)
-            {
-                MelonLogger.Msg("Failed to find suitable subtitle");
-                return null;
-            }
-            MelonLogger.Msg($"Best Match Found!\n Score: {bestMatch.Score}\n DL Link: {bestMatch.SubDownloadLink}\n Hearing Impaired Designed: {bestMatch.SubHearingImpaired}");
-            var subFile = await SubtitlesApi.FetchSub(bestMatch.SubDownloadLink);
-            return subFile.Length < 512 ? null : SRTDecoder.DecodeSrtIntoTimelineEvents(subFile);
-        } 
+            var subFile = await SubtitlesApi.FetchSub(title.SubDownloadLink);
+            return subFile.Length < 512 ? ("", null) : (title.MovieName, SRTDecoder.DecodeSrtIntoTimelineEvents(subFile));
+        }
 
         private IEnumerator UpdateSubtitles()
         {
             while (true)
             {
-                if (_tl != null)
+                if (_tl != null && _currentState == PlayerState.Play)
                 {
+                    UITextArea.ToggleUI(true);
                     List<TimelineEvent> events = _tl.ScrubToTime(CurrentTimeInMs + _msOffset);
                     // Large gaps in time (resync, lag, a big seek) can result in a massive list of missed events.
                     // To prevent this, we only care about the two most recent events
                     if (events.Count > 2) 
                         events.RemoveRange(0, events.Count - 3);
                     
-                    foreach (var eventObj in events)
+                    foreach (var eventObj in events.Where(eventObj => !eventObj.eventText.Contains("OpenSubtitles")))
                     {
                         MelonLogger.Msg(eventObj.eventText);
                         UITextArea.Text = eventObj.eventText;
                     }
+                }
+                else
+                {
+                    UITextArea.Text = "";
+                    UITextArea.ToggleUI(false);
                 }
 
                 yield return new WaitForSeconds(0.5f);

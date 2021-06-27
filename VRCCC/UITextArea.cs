@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using MelonLoader;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace VRCCC
@@ -32,11 +34,22 @@ namespace VRCCC
             TextParent.name = "VRCCC Text";
             TextParent.localPosition = new Vector3(0, -350, 0);
             TextComponent = TextParent.FindChild("Text").GetComponent<Text>();
+            TextComponent.supportRichText = true;
             
             //TODO: Perhaps scale the font size depending on how much text is being rendered
             TextComponent.fontSize = 25;
         }
 
+        public static IEnumerator DisplayAlert(string text, float timeInSeconds)
+        {
+            MelonLogger.Msg(text);
+            Text = text;
+            ToggleUI(true);
+            yield return new WaitForSeconds(timeInSeconds);
+            ToggleUI(false);
+            Text = "";
+        }
+        
         public static void ToggleUI(bool newShownState) => TextParent.gameObject.SetActive(newShownState);
     }
 }
