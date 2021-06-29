@@ -17,6 +17,7 @@ namespace VRCCC
     public class VRCCC : MelonMod
     {
         public static readonly List<TrackedPlayer> TrackedPlayers = new List<TrackedPlayer>();
+        public static readonly List<Action> MainThreadExecutionQueue = new List<Action>();
         private bool _shouldCheckUiManager;
         private Type _uiManager;
         private MethodInfo _uiManagerInstance;
@@ -32,10 +33,14 @@ namespace VRCCC
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+            foreach (var lingeringPlayer in TrackedPlayers)
+                lingeringPlayer.Dispose();
             TrackedPlayers.Clear();
+            
             foreach (var discoveredPlayer in Object.FindObjectsOfType<VideoPlayer>())
                 TrackedPlayers.Add(new TrackedPlayer(discoveredPlayer));
         }
+
         
         public override void VRChat_OnUiManagerInit() => UiManagerInit();
         

@@ -6,6 +6,7 @@ namespace VRCCC
     [SuppressMessage("ReSharper", "UnassignedField.Global")]    // Shaddap, Rider
     public class Subtitle
     {
+        public string MovieName;
         public string LanguageName;
         [JsonProperty("SubHearingImpaired")] private string _subHearingImpaired;
         [JsonIgnore] public bool SubHearingImpaired => _subHearingImpaired == "1";

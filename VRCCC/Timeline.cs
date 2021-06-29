@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using UnityEngine.Assertions;
 
 namespace VRCCC
 {
@@ -73,7 +71,7 @@ namespace VRCCC
                 // TODO: could be improved with a recursive function doing a binary search to find the event with the 
                 // closest timecode, then scrub back 1 
             }
-            
+           
             for (int i=_lastIndex+1; i < listOfEvents.Count-1; i++) { 
                 if (currentElapsedTimeMS >= listOfEvents[i].time) { 
                     events.Add(listOfEvents[i]);

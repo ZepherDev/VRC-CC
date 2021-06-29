@@ -119,7 +119,6 @@
         <Compile Include="QuickMenu\QuickModeMenu.cs" />
         <Compile Include="QuickMenu\ToggleButton.cs" />
         <Compile Include="SRTDecoder.cs" />
-        <Compile Include="SubtitleInfo.cs" />
         <Compile Include="Subtitle.cs" />
         <Compile Include="SubtitlesApi.cs" />
         <Compile Include="Timeline.cs" />

@@ -5,7 +5,7 @@ namespace VRCCC
     public class TimelineError : Exception
     {
         Type type;
-        String additionalInfo;
+        string additionalInfo;
             
         public TimelineError(Type type, string additionalInfo = "") {
             this.type = type;
