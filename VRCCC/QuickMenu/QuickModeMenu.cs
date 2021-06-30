@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using MelonLoader;
@@ -20,14 +21,14 @@ namespace VRCCC.QuickMenu
             (int)_qmTabManager.field_Private_EnumNPublicSealedvaHoNoPl4vUnique_0 == _tabIndex;
         public static MainMenu MainMenu;
         
-        public static void CheckIfShouldInit() { 
+        public static void InitIfNeeded() { 
             if (!_hasInitMenu)
                 InitializeMenu();
         }
         
         private static void InitializeMenu() { 
             try { 
-                CreateNotificationTab("VRC-CC", "Text", Color.black); 
+                CreateNotificationTab("VRCCC", "Text", Color.black); 
                 _hasInitMenu = true;
             } catch (Exception e) { 
                 MelonLogger.Error("Exception while trying to create the notification tab! Aborting. " + e);
@@ -103,7 +104,12 @@ namespace VRCCC.QuickMenu
         }
         
         private static Sprite LoadQmSprite(AssetBundle bundle) { 
-            var t = bundle.LoadAsset<Texture2D>("vrc-cc logo.png");
+            var names = bundle.GetAllAssetNames();
+            foreach (var name in names) { 
+                MelonLogger.Msg($"name: {name}");
+            }
+            var t = bundle.LoadAsset<Texture2D>("assets/vrc-cc_logo");
+            if (t == null) MelonLogger.Error("t is null");
             var rect = new Rect(0.0f, 0.0f, t.width, t.height);
             var pivot = new Vector2(0.5f, 0.5f);
             var border = Vector4.zero;
@@ -115,10 +121,19 @@ namespace VRCCC.QuickMenu
         
         private static byte[] ExtractAb() { 
             var a = Assembly.GetExecutingAssembly();    
-            using (var resFilestream = a.GetManifestResourceStream("VRC-CC.VRC-CC")) { 
-                if (resFilestream == null) return null;
+            
+            MelonLogger.Msg("Resource names");
+            foreach (var name in a.GetManifestResourceNames()) { 
+                MelonLogger.Msg($"\tname: {name}");
+            }
+            using (Stream resFilestream = a.GetManifestResourceStream("VRCCC.VRCCC")) { 
+                if (resFilestream == null) { 
+                    MelonLogger.Error("Failed to find the resource filestream");
+                    return null;
+                }
                 var ba = new byte[resFilestream.Length];
                 resFilestream.Read(ba, 0, ba.Length);
+                MelonLogger.Msg($"ba length: {ba.Length}");
                 return ba;
             }
         }
