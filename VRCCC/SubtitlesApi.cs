@@ -17,11 +17,9 @@ namespace VRCCC {
         
         private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
 
-        public static async Task<Subtitle?> QuerySubtitles(string movieName)
-        {
+        public static async Task<Subtitle?> QuerySubtitles(string movieName) {
             MelonLogger.Msg($"Requesting {movieName}");
-            var requestData = new HttpRequestMessage()
-            {
+            var requestData = new HttpRequestMessage() {
                 RequestUri = new Uri("https://8m9ahcccna.execute-api.us-east-1.amazonaws.com/prod"),
                 Method = HttpMethod.Get
             };
@@ -38,8 +36,8 @@ namespace VRCCC {
             }
         }
         
-        private static MemoryStream GetSubIfCached(string subtitleURL) {
-            MemoryStream ms = null;
+        private static MemoryStream? GetSubIfCached(string subtitleURL) {
+            MemoryStream? ms = null;
            
             if (CachedSRTs.ContainsKey(subtitleURL)) 
                 ms = CachedSRTs[subtitleURL];
@@ -78,8 +76,8 @@ namespace VRCCC {
                     MelonLogger.Error("An exception occurred while trying to fetch or decode a subtitle file! " + e);
                 }
             }
-            compressedMs.Seek(0,0);
             try {
+                compressedMs.Seek(0,0);
                 var decompressedMs = new MemoryStream();
                 var gzs = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), 
                     BUFFER_SIZE_BYTES);
