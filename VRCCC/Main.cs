@@ -21,7 +21,6 @@ namespace VRCCC
         private bool _shouldCheckUiManager;
         private Type _uiManager;
         private MethodInfo _uiManagerInstance;
-        public static readonly List<Action> MainThreadExecutionQueue = new List<Action>();
         private Assembly _assemblyCSharp;
 
         public override void OnApplicationStart() {
@@ -40,9 +39,14 @@ namespace VRCCC
             foreach (var discoveredPlayer in Object.FindObjectsOfType<VideoPlayer>())
                 TrackedPlayers.Add(new TrackedPlayer(discoveredPlayer));
         }
+        
+        public override void OnSceneWasLoaded(int level, string levelName) { 
+            if (level == -1) 
+                QuickModeMenu.InitIfNeeded();
+        }
 
         
-        public override void VRChat_OnUiManagerInit() => UiManagerInit();
+        //public override void VRChat_OnUiManagerInit() => UiManagerInit();
         
         private static void UiManagerInit() { 
         }
@@ -62,7 +66,6 @@ namespace VRCCC
         }
         
         private void CheckUiManager() { 
-            // wut
             if (_assemblyCSharp == null) return;
             
             if (_uiManager == null) _uiManager = _assemblyCSharp.GetType("VRCUiManager");
@@ -78,7 +81,7 @@ namespace VRCCC
                 return;
             }
             
-            if (_uiManagerInstance.Invoke(null, new object[0]) == null) 
+            if (_uiManagerInstance.Invoke(null, Array.Empty<object>()) == null) 
                 return;
             
             _shouldCheckUiManager = false;
