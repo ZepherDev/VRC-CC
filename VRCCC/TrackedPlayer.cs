@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Video;
+using VRC.SDK.Internal.ModularPieces;
 
 namespace VRCCC
 {
@@ -64,7 +65,7 @@ namespace VRCCC
             else if (_coroutineToken != null) 
                 MelonCoroutines.Stop(_coroutineToken);
         }
-
+        
         public async void OnURLChange(string newURl)
         {
             var (movieName, timelineEvents) = await FetchSubtitlesForNewUrl(newURl);
@@ -75,9 +76,22 @@ namespace VRCCC
             }
             
             _tl = new Timeline(timelineEvents);
-            VRCCC.MainThreadExecutionQueue.Add(() => MelonCoroutines.Start(UITextArea.DisplayAlert($"Starting Subtitle Playback for: {movieName}", 3)));
+            VRCCC.MainThreadExecutionQueue.Add(() => MelonCoroutines.Start(
+                UITextArea.DisplayAlert($"Starting Subtitle Playback for: {movieName}", 3)));
+        }
+        
+        /**
+         * What happens when you try to swap a timeline that's being accessed in a coroutine? Undefined!
+         */
+        public void UnsafeSwapTimeline(string movieName, List<TimelineEvent> timelineEvents) { 
+            _tl = new Timeline(timelineEvents);
+            VRCCC.MainThreadExecutionQueue.Add(() => MelonCoroutines.Start(
+                UITextArea.DisplayAlert($"Starting Subtitle Playback for: {movieName}", 3)));
         }
 
+        /**
+         * Takes a playback URL from a movie world and tries to query for it.
+         */
         private static async Task<(string, List<TimelineEvent>)> FetchSubtitlesForNewUrl(string newUrl)
         {
             var uri = new VideoUri(newUrl);
@@ -89,7 +103,8 @@ namespace VRCCC
             }
 
             var subFile = await SubtitlesApi.FetchSub(title.SubDownloadLink);
-            return subFile.Length < 512 ? ("", null) : (title.MovieName, SRTDecoder.DecodeSrtIntoTimelineEvents(subFile));
+            return subFile.Length < 512 ? ("", null) : 
+                (title.MovieName, SRTDecoder.DecodeSrtIntoTimelineEvents(subFile));
         }
 
         private IEnumerator UpdateSubtitles()
