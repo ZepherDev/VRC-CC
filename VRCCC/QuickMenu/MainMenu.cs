@@ -30,7 +30,7 @@ namespace VRCCC.QuickMenu
             _menuObject.transform.localRotation  = new Quaternion(0, 0, 0, 1);
             
             try { 
-                Button[] items = _menuPrefab.GetComponentsInChildren<Button>();
+                Button[] items = _menuObject.GetComponentsInChildren<Button>();
                 foreach (Button button in items) { 
                     if (button.name == "SearchButton")  { _searchButton = button; continue; }
                     if (button.name == "SelectButton")  { _selectButton = button; continue; }
@@ -39,7 +39,7 @@ namespace VRCCC.QuickMenu
                     if (button.name == "PositiveHalfS") { _positiveHalfSButton = button; continue; }
                     if (button.name == "PositiveS")     { _positiveSButton = button; }
                 }
-                Text[] texts = _menuPrefab.GetComponentsInChildren<Text>();
+                Text[] texts = _menuObject.GetComponentsInChildren<Text>();
                 foreach (Text text in texts) { 
                     if (text.name == "ResultsAreaText") { _resultText = text; }
                     if (text.name == "CurrentOffset")   { _currentOffsetText = text; }
