@@ -59,6 +59,7 @@ namespace VRCCC.QuickMenu
             _qmTabManager.field_Public_ArrayOf_GameObject_0 = existingTabs.ToArray();
             
             newTab.Find("Icon").GetComponent<Image>().sprite = LoadQmSprite(bundle);
+            MelonLogger.Msg("loaded.");
             
             // Menu
             Transform quickModeMenus = quickMenu.transform.Find("QuickModeMenus"); 
@@ -72,18 +73,19 @@ namespace VRCCC.QuickMenu
             newMenu.anchoredPosition = new Vector2(0, 200f);
             newMenu.gameObject.SetActive(false);
             
+            MelonLogger.Msg("creating main menu");
             MainMenu = new MainMenu(newMenu, bundle);
+            if (MainMenu == null) MelonLogger.Error("Failed to create MainMenu");
             
             // Tab interaction
-            Button tabButton = newTab.GetComponent<Button>();
+            var tabButton = newTab.GetComponent<Button>();
             tabButton.onClick.RemoveAllListeners();
             tabButton.onClick.AddListener((Action)(() =>
-                {
-                    global::QuickMenu.prop_QuickMenu_0.field_Private_GameObject_6.SetActive(false);
-                    global::QuickMenu.prop_QuickMenu_0.field_Private_GameObject_6 = newMenu.gameObject;
-                    newMenu.gameObject.SetActive(true);
-                }));
-            
+            {
+                global::QuickMenu.prop_QuickMenu_0.field_Private_GameObject_6.SetActive(false);
+                global::QuickMenu.prop_QuickMenu_0.field_Private_GameObject_6 = newMenu.gameObject;
+                newMenu.gameObject.SetActive(true);
+            }));
             newTab.transform.FindChild("Badge").gameObject.SetActive(false);
             
             // Allow invite menu to instantiate
@@ -108,7 +110,7 @@ namespace VRCCC.QuickMenu
             foreach (var name in names) { 
                 MelonLogger.Msg($"name: {name}");
             }
-            var t = bundle.LoadAsset<Texture2D>("assets/vrc-cc_logo");
+            var t = bundle.LoadAsset<Texture2D>("Assets/AssetBundles/vrc-cc_logo.png");
             if (t == null) MelonLogger.Error("t is null");
             var rect = new Rect(0.0f, 0.0f, t.width, t.height);
             var pivot = new Vector2(0.5f, 0.5f);
