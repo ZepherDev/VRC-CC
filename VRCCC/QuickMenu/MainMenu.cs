@@ -11,8 +11,8 @@ namespace VRCCC.QuickMenu
     public class MainMenu
     {
         private GameObject _menuObject;
-        private GameObject _resultItemPrefab;
         private GameObject _listContent;
+        private GameObject _resultItem;
         
         private Button _searchButton;
         private Button _negativeSButton;
@@ -23,14 +23,14 @@ namespace VRCCC.QuickMenu
         private Text _currentOffsetText;
         private InputField _inputField;
         private List<Subtitle> _subtitles;
-        private Font _font;
         
         public MainMenu(Transform parentMenuTransform, AssetBundle bundle) { 
             // Grab prefabs
-            _resultItemPrefab = bundle.LoadAsset<GameObject>("Assets/AssetBundles/ResultObject.prefab");
-            if (_resultItemPrefab == null) MelonLogger.Error("Failure when trying to get Result Object prefab");
             GameObject menuPrefab = bundle.LoadAsset<GameObject>("Assets/AssetBundles/VRCCC-UI.prefab");
-            if (menuPrefab == null) MelonLogger.Error("Failure when trying to get menuPrefab");
+            if (menuPrefab == null) { 
+                MelonLogger.Error("Failure when trying to get menuPrefab or resultPrefab");
+                return; 
+            }
             
             // Build menu
             _menuObject = Object.Instantiate(menuPrefab, parentMenuTransform, true);
@@ -38,10 +38,12 @@ namespace VRCCC.QuickMenu
             _menuObject.transform.localScale     = Vector3.oneVector;
             _menuObject.transform.localRotation  = new Quaternion(0, 0, 0, 1);
             
+            
             InitReferences();
             MelonLogger.Msg("UI: Grabbed references");
             SetupStaticButtons(); 
             MelonLogger.Msg("UI: set up buttons and finished init");
+            
         }
         
         private void InitReferences() { 
@@ -59,20 +61,16 @@ namespace VRCCC.QuickMenu
                     if (text.name == "CurrentOffset")   { _currentOffsetText = text; }
                 }
                 _inputField = _menuObject.GetComponentInChildren<InputField>();
-                /*
-                foreach (Transform transform in _menuObject.GetComponents<Transform>()) { 
-                    if (transform.gameObject.name == "ListContent") { 
-                        _listContent = transform.gameObject;
-                    }
-                }
-                */
-                Transform child = _menuObject.transform.FindChild("ListContent");
-                if (child != null) _listContent = child.gameObject;
+                _listContent = _menuObject.transform.Find(
+                    "Pages/MainPage/ResultsArea/ScrollList/ListViewport/ListContent").gameObject;
+                _resultItem = _menuObject.transform.Find(
+                    "Pages/MainPage/ResultsArea/ScrollList/ListViewport/ListContent/ResultObject").gameObject;
             } catch (Exception e) { 
                 MelonLogger.Error($"Error while trying to get individual components in the menu prefab. {e}.");
             }
             if (_searchButton == null) MelonLogger.Error("Unable to get Search Button");
             if (_listContent == null) MelonLogger.Error("Unable to get the list content GameObject");
+            if (_resultItem == null) MelonLogger.Error("Unable to get the result item");
         }
         
         /**
@@ -90,9 +88,18 @@ namespace VRCCC.QuickMenu
                         foreach (Subtitle subtitle in _subtitles) { 
                             if (subtitle != null) { 
                                 MelonLogger.Msg($"Handling returned result for {subtitle.MovieName}.");
-                                GameObject result = CreateResultObject(subtitle);
-                                MelonLogger.Msg("Setting parent for result");
-                                result.transform.parent = _listContent.transform;
+                                try { 
+                                    GameObject result = CreateResultObject(subtitle);
+                                    MelonLogger.Msg("Setting parent for result");
+                                    if (result == null) MelonLogger.Error("Failed to get result.");
+                                    if (result.transform == null) MelonLogger.Error("Failed to get result's transform");
+                                    if (_listContent == null) MelonLogger.Error("Somehow list content is now null.");
+                                    if (_listContent.transform == null) MelonLogger.Error("List content's transform is null");
+                                    result.transform.SetParent(_listContent.transform);
+                                    MelonLogger.Msg("parent set.");
+                                } catch (Exception e) { 
+                                    MelonLogger.Error($"Exception when trying to create a result object {e}");
+                               } 
                                 
                             }
                         }
@@ -105,9 +112,10 @@ namespace VRCCC.QuickMenu
         }
         
         private void ClearResultList() { 
-            if (_listContent == null) return;
-            foreach (Transform child in _listContent.transform) { 
-                GameObject.Destroy(child.gameObject);
+            if (_listContent == null || _listContent.transform == null) return;
+            // Leave the first item, which is used as a template and duplicated 
+            for (int x=_listContent.transform.childCount - 1; x>1; ++x) { 
+                GameObject.Destroy(_listContent.transform.GetChild(x).gameObject);
             }
         }
        
@@ -118,21 +126,36 @@ namespace VRCCC.QuickMenu
          */
         private GameObject CreateResultObject(Subtitle subtitle) 
         {
-            GameObject result = Object.Instantiate(_resultItemPrefab, _menuObject.transform, true);
-            foreach (Text text in result.GetComponentsInChildren<Text>()) { 
+            if (_resultItem == null) {
+                MelonLogger.Error("Somehow the result item prefab is null.");
+                return null;
+            }
+            GameObject newResult = Object.Instantiate(_resultItem);
+            if (newResult == null) {
+                MelonLogger.Error("Unable to duplicate the  result object");
+                return null;
+            }
+                
+            foreach (Text text in newResult.GetComponentsInChildren<Text>()) { 
                 if (text.name == "ResultText") { 
                     text.text = $"Name: {subtitle.MovieName}\n\tURL: {subtitle.SubDownloadLink}" +
                                 $"\n\tLang: {subtitle.LanguageName}" +
                                 $"\n\tScore: {subtitle.Score}";
+                    MelonLogger.Msg($"Setting result text to {text.text}");
                     break;
                 }
             }
-            Button button = result.GetComponentInChildren<Button>();
+            Button button = newResult.GetComponentInChildren<Button>();
+            if (button == null) { 
+                MelonLogger.Error("Unable to get Button from instantiated result object.");
+                return null;
+            }
+            
             button.onClick.AddListener((Action)(async () => { 
                 MelonLogger.Msg($"Clicked select button for {subtitle.MovieName}!");
             }));
             
-            
+            newResult.gameObject.SetActive(true);
             
             /*
             _selectButton.onClick.AddListener((Action)(async () => { 
@@ -154,7 +177,7 @@ namespace VRCCC.QuickMenu
             }));
             */
             
-            return result;
+            return newResult;
         }
         
     }
