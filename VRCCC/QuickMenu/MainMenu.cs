@@ -81,7 +81,8 @@ namespace VRCCC.QuickMenu
         private void SetupStaticButtons() { 
             _searchButton.onClick.AddListener((Action)(async () => { 
                 if (_inputField.text != "") { 
-                    ClearResultList();
+                    // TODO: fix clearing previous list 
+                    //ClearResultList();
                     MelonLogger.Msg($"Searching for {_inputField.text}");
                     try {
                         _subtitles = await SubtitlesApi.QuerySubtitles(_inputField.text);
@@ -95,7 +96,7 @@ namespace VRCCC.QuickMenu
                                     if (result.transform == null) MelonLogger.Error("Failed to get result's transform");
                                     if (_listContent == null) MelonLogger.Error("Somehow list content is now null.");
                                     if (_listContent.transform == null) MelonLogger.Error("List content's transform is null");
-                                    result.transform.SetParent(_listContent.transform);
+                                    result.transform.SetParent(_listContent.transform, false);
                                     MelonLogger.Msg("parent set.");
                                 } catch (Exception e) { 
                                     MelonLogger.Error($"Exception when trying to create a result object {e}");
@@ -132,15 +133,15 @@ namespace VRCCC.QuickMenu
             }
             GameObject newResult = Object.Instantiate(_resultItem);
             if (newResult == null) {
-                MelonLogger.Error("Unable to duplicate the  result object");
+                MelonLogger.Error("Unable to duplicate the result object");
                 return null;
             }
                 
             foreach (Text text in newResult.GetComponentsInChildren<Text>()) { 
                 if (text.name == "ResultText") { 
-                    text.text = $"Name: {subtitle.MovieName}\n\tURL: {subtitle.SubDownloadLink}" +
-                                $"\n\tLang: {subtitle.LanguageName}" +
-                                $"\n\tScore: {subtitle.Score}";
+                    text.text = $"{subtitle.MovieName} " +
+                                $"{(subtitle.SubHearingImpaired ? "(Hearing Impaired)" : "")} " +
+                                $"({subtitle.Score}) ({subtitle.Score})";
                     MelonLogger.Msg($"Setting result text to {text.text}");
                     break;
                 }
@@ -151,33 +152,25 @@ namespace VRCCC.QuickMenu
                 return null;
             }
             
-            button.onClick.AddListener((Action)(async () => { 
-                MelonLogger.Msg($"Clicked select button for {subtitle.MovieName}!");
-            }));
-            
+            button.onClick.AddListener((Action)(() => { SelectButtonClick(subtitle); }));
             newResult.gameObject.SetActive(true);
             
-            /*
-            _selectButton.onClick.AddListener((Action)(async () => { 
-                if (_subtitle != null) { 
-                    // string subFile = await SubtitlesApi.FetchSub(_subtitle.SubDownloadLink);
-                    // List<TimelineEvent> subData = SRTDecoder.DecodeSrtIntoTimelineEvents(subFile);
-                    MelonLogger.Msg($"Trying to switch to url {_subtitle.SubDownloadLink}");
-                    string srtString = await SubtitlesApi.FetchSub(_subtitle.SubDownloadLink);
-                    List<TimelineEvent> timelineEvents = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
-                    Timeline timeline = new Timeline(timelineEvents);
-                    foreach (TrackedPlayer player in VRCCC.TrackedPlayers) { 
-                        MelonLogger.Msg("Swapping to new timeline!");
-                        player.UnsafeSwapTimeline(_subtitle.MovieName, timelineEvents);
-                        MelonLogger.Msg($"Timeline has {timelineEvents.Count} events.");
-                    }
-                }
-                // var foundPlayer = VRCCC.TrackedPlayers.Find(player => player.Equals(instance));
-                // VRCCC.TrackedPlayers.Find
-            }));
-            */
-            
             return newResult;
+        }
+        
+        private async void SelectButtonClick(Subtitle subtitle) { 
+            if (subtitle == null) return;
+            MelonLogger.Msg($"Clicked select button for {subtitle.MovieName}!");
+                
+            string srtString = await SubtitlesApi.FetchSub(subtitle.SubDownloadLink);
+            List<TimelineEvent> timelineEvents = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
+            
+            foreach (TrackedPlayer player in VRCCC.TrackedPlayers) { 
+                MelonLogger.Msg("Swapping to new timeline!");
+                player.UnsafeSwapTimeline(subtitle.MovieName, timelineEvents);
+                MelonLogger.Msg($"Timeline has {timelineEvents.Count} events.");
+            }
+            
         }
         
     }
