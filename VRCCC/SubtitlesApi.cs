@@ -16,8 +16,17 @@ namespace VRCCC {
         private const int BUFFER_SIZE_BYTES = 1024*1024; // 1MB
         
         private static readonly Dictionary<string, MemoryStream> CachedSRTs = new Dictionary<string, MemoryStream>();
+        
+        public static async Task<List<Subtitle?>> QuerySubtitles(string movieName) { 
+            List<Subtitle?> subtitles = new List<Subtitle?>();
+            
+            // TODO: add API endpoint for fetching multiple results
+            subtitles.Add(await QuerySubtitle(movieName));
+            
+            return subtitles;
+        }
 
-        public static async Task<Subtitle?> QuerySubtitles(string movieName) {
+        public static async Task<Subtitle?> QuerySubtitle(string movieName) {
             MelonLogger.Msg($"Requesting {movieName}");
             var requestData = new HttpRequestMessage() {
                 RequestUri = new Uri("https://8m9ahcccna.execute-api.us-east-1.amazonaws.com/prod"),

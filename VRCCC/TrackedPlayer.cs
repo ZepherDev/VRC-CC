@@ -95,7 +95,7 @@ namespace VRCCC
         private static async Task<(string, List<TimelineEvent>)> FetchSubtitlesForNewUrl(string newUrl)
         {
             var uri = new VideoUri(newUrl);
-            var title = await SubtitlesApi.QuerySubtitles(uri.GetFileName());
+            var title = await SubtitlesApi.QuerySubtitle(uri.GetFileName());
             if (title == null)
             {
                 MelonLogger.Msg("Failed to find movie");
