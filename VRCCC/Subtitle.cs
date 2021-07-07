@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace VRCCC
@@ -14,5 +15,6 @@ namespace VRCCC
         public double Score;
         [JsonProperty("MovieByteSize")] private string _movieByteSize;
         [JsonIgnore] public int MovieByteSize => int.Parse(_movieByteSize);
+        [JsonProperty("Alternatives")] public List<Subtitle> Alternatives;
     }
 }

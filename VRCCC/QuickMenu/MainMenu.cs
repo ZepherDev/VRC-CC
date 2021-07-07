@@ -22,7 +22,7 @@ namespace VRCCC.QuickMenu
         
         private Text _currentOffsetText;
         private InputField _inputField;
-        private List<Subtitle> _subtitles;
+        private Subtitle _subtitle;
         
         public MainMenu(Transform parentMenuTransform, AssetBundle bundle) { 
             // Grab prefabs
@@ -85,8 +85,8 @@ namespace VRCCC.QuickMenu
                     //ClearResultList();
                     MelonLogger.Msg($"Searching for {_inputField.text}");
                     try {
-                        _subtitles = await SubtitlesApi.QuerySubtitles(_inputField.text);
-                        foreach (Subtitle subtitle in _subtitles) { 
+                        _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
+                        foreach (Subtitle subtitle in _subtitle.Alternatives) { 
                             if (subtitle != null) { 
                                 MelonLogger.Msg($"Handling returned result for {subtitle.MovieName}.");
                                 try { 
