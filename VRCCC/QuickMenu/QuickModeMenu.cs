@@ -102,7 +102,7 @@ namespace VRCCC.QuickMenu
                     new Il2CppSystem.Int32 { 
                         m_value = (int)value 
                     }.BoxIl2CppObject()
-                ); // wut
+                ); 
         }
         
         private static Sprite LoadQmSprite(AssetBundle bundle) { 

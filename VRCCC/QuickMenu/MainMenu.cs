@@ -82,10 +82,11 @@ namespace VRCCC.QuickMenu
             _searchButton.onClick.AddListener((Action)(async () => { 
                 if (_inputField.text != "") { 
                     // TODO: fix clearing previous list 
-                    //ClearResultList();
+                    //ClearResultList()
                     MelonLogger.Msg($"Searching for {_inputField.text}");
                     try {
                         _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
+                        MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
                         foreach (Subtitle subtitle in _subtitle.Alternatives) { 
                             if (subtitle != null) { 
                                 MelonLogger.Msg($"Handling returned result for {subtitle.MovieName}.");
@@ -100,8 +101,7 @@ namespace VRCCC.QuickMenu
                                     MelonLogger.Msg("parent set.");
                                 } catch (Exception e) { 
                                     MelonLogger.Error($"Exception when trying to create a result object {e}");
-                               } 
-                                
+                                } 
                             }
                         }
                     } catch (Exception e) { 
@@ -121,7 +121,7 @@ namespace VRCCC.QuickMenu
         }
        
         /**
-         * Using the _resultItemPrefab retrieved earlier, instantiate a new result object and populate it with
+         * Using the _resultItemPrefab retrieved earlier, instantiates a new result object and populates it with
          * the provided subtitle info. This also sets up a click handler that will change the currently playing
          * subtitles to the result.
          */
