@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -87,7 +88,7 @@ namespace VRCCC.QuickMenu
                     try {
                         _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
                         MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
-                        foreach (Subtitle subtitle in _subtitle.Alternatives) { 
+                        foreach (Subtitle subtitle in _subtitle.Alternatives.Take(3)) { 
                             if (subtitle != null) { 
                                 MelonLogger.Msg($"Handling returned result for {subtitle.MovieName}.");
                                 try { 
@@ -97,11 +98,14 @@ namespace VRCCC.QuickMenu
                                     if (result.transform == null) MelonLogger.Error("Failed to get result's transform");
                                     if (_listContent == null) MelonLogger.Error("Somehow list content is now null.");
                                     if (_listContent.transform == null) MelonLogger.Error("List content's transform is null");
-                                    result.transform.SetParent(_listContent.transform, false);
-                                    MelonLogger.Msg("parent set.");
+                                    VRCCC.MainThreadExecutionQueue.Add( () => { 
+                                        result.transform.SetParent(_listContent.transform, false);
+                                        MelonLogger.Msg("parent set.");
+                                    });
                                 } catch (Exception e) { 
                                     MelonLogger.Error($"Exception when trying to create a result object {e}");
                                 } 
+                                
                             }
                         }
                     } catch (Exception e) { 
