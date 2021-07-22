@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Il2CppSystem.Reflection;
 using MelonLoader;
-using UnhollowerBaseLib.Runtime;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
-using BindingFlags = System.Reflection.BindingFlags;
 using Object = UnityEngine.Object;
 
 namespace VRCCC.QuickMenu
@@ -30,6 +26,7 @@ namespace VRCCC.QuickMenu
         
         private bool _initSucc = false;
         
+        private VRCUiPopupManager _vrcUiPopupManager;
         
         public MainMenu(Transform parentMenuTransform, AssetBundle bundle) { 
             GameObject menuPrefab = bundle.LoadAsset<GameObject>("Assets/AssetBundles/VRCCC-UI.prefab");
@@ -47,10 +44,6 @@ namespace VRCCC.QuickMenu
             InitReferences();
             MelonLogger.Msg("UI: Grabbed references");
             SetupStaticButtons(); 
-            _miVrcUiPopupManagerGetInstance = typeof(VRCUiPopupManager).
-                GetMethod("get_Instance", BindingFlags.Public| BindingFlags.Static);
-            if (_miVrcUiPopupManagerGetInstance == null) 
-                MelonLogger.Error("Failure when attempting to get the get_Instance method of the UI PopupManager.");
             MelonLogger.Msg("UI: set up buttons and finished init");
         }
         
@@ -73,6 +66,7 @@ namespace VRCCC.QuickMenu
                     "Pages/MainPage/ResultsArea/ScrollList/ListViewport/ListContent").gameObject;
                 _resultItem = _menuObject.transform.Find(
                     "Pages/MainPage/ResultsArea/ScrollList/ListViewport/ListContent/ResultObject").gameObject;
+                _vrcUiPopupManager = VRCUiPopupManager.prop_VRCUiPopupManager_0;
             } catch (Exception e) { 
                 MelonLogger.Error($"Error while trying to get individual components in the menu prefab. {e}.");
                 return;
@@ -101,33 +95,48 @@ namespace VRCCC.QuickMenu
             _positiveSButton.onClick.AddListener((Action)     ( () => { OffsetButtonClick(1000); }));
         }
         
-        private static System.Reflection.MethodInfo _miVrcUiPopupManagerGetInstance;
-        public static VRCUiPopupManager VrcUiPopupManager => 
-            (VRCUiPopupManager)_miVrcUiPopupManagerGetInstance?.Invoke(null, null);
-        
         private async void OffsetButtonClick(int offset) { 
             VRCCC.TrackedPlayers[0].IncrementOrDecrementOffset(offset);
             _currentOffsetText.text = VRCCC.TrackedPlayers[0].GetCurrentOffsetMs().ToString();
         }
         
         private async void SearchButtonOnClick() { 
-            VrcUiPopupManager?.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
-                // "1","2",InputField.InputType.Standard,false,"3",Action<St
-                /*
-            if (_inputField.text != "") { 
-                // TODO: fix clearing previous list 
-                //ClearResultList()
-                MelonLogger.Msg($"Searching for {_inputField.text}");
-                try {
-                    _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
-                    MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
-                    foreach (Subtitle subtitle in _subtitle.Alternatives.Take(3))
-                        SetupResultAndSetParent(subtitle);
-                } catch (Exception e) { 
-                    MelonLogger.Error($"Exception when trying to get new subtitles. {e}.");
-                }
+            if (_vrcUiPopupManager == null) { 
+                MelonLogger.Error("Unable to get the UIPopupManager!");
+                return;
             }
-            */
+            _vrcUiPopupManager.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
+                "Search Subtitles",
+                "Movie Name",
+                InputField.InputType.Standard,
+                false, // numeric keypad
+                "Search",
+                new Action<string, Il2CppSystem.Collections.Generic.List<KeyCode>, Text>(async (s, list, arg3) => {
+                   _inputField.text = s;
+                   if (s != "") 
+                       DoSearch(s);
+                }), 
+                new Action(() => MelonLogger.Msg("Unknown action idk")),
+                "Enter movie name...",
+                true, // close after press
+                new Action<VRCUiPopup> ( (s) => { MelonLogger.Msg("Search button clicked"); }),
+                true, // idk
+                1024 // limit number of chars
+                );
+        }
+        
+        private async void DoSearch(String movieName) { 
+           // TODO: fix clearing previous list 
+           //ClearResultList()
+           MelonLogger.Msg($"Searching for {_inputField.text}");
+           try {
+               _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
+               MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
+               foreach (Subtitle subtitle in _subtitle.Alternatives.Take(6))
+                   SetupResultAndSetParent(subtitle);
+           } catch (Exception e) { 
+               MelonLogger.Error($"Exception when trying to get new subtitles. {e}.");
+           }
         }
         
         private void SetupResultAndSetParent(Subtitle subtitle) { 
@@ -192,6 +201,10 @@ namespace VRCCC.QuickMenu
         
         private async void SelectButtonClick(Subtitle subtitle) { 
             if (subtitle == null) return;
+            if (VRCCC.TrackedPlayers.Count <= 0) { 
+                MelonLogger.Msg("Tried to start subtitles but couldn't find any players.");
+                return;
+            }
             
             string srtString = await SubtitlesApi.FetchSub(subtitle.SubDownloadLink);
             List<TimelineEvent> timelineEvents = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
