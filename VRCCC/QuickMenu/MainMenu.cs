@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Il2CppSystem.Reflection;
 using MelonLoader;
+using UnhollowerBaseLib.Runtime;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
-using VRC.SDKBase.Validation.Performance.Scanners;
+using BindingFlags = System.Reflection.BindingFlags;
 using Object = UnityEngine.Object;
 
 namespace VRCCC.QuickMenu
@@ -44,6 +47,10 @@ namespace VRCCC.QuickMenu
             InitReferences();
             MelonLogger.Msg("UI: Grabbed references");
             SetupStaticButtons(); 
+            _miVrcUiPopupManagerGetInstance = typeof(VRCUiPopupManager).
+                GetMethod("get_Instance", BindingFlags.Public| BindingFlags.Static);
+            if (_miVrcUiPopupManagerGetInstance == null) 
+                MelonLogger.Error("Failure when attempting to get the get_Instance method of the UI PopupManager.");
             MelonLogger.Msg("UI: set up buttons and finished init");
         }
         
@@ -94,12 +101,19 @@ namespace VRCCC.QuickMenu
             _positiveSButton.onClick.AddListener((Action)     ( () => { OffsetButtonClick(1000); }));
         }
         
+        private static System.Reflection.MethodInfo _miVrcUiPopupManagerGetInstance;
+        public static VRCUiPopupManager VrcUiPopupManager => 
+            (VRCUiPopupManager)_miVrcUiPopupManagerGetInstance?.Invoke(null, null);
+        
         private async void OffsetButtonClick(int offset) { 
             VRCCC.TrackedPlayers[0].IncrementOrDecrementOffset(offset);
             _currentOffsetText.text = VRCCC.TrackedPlayers[0].GetCurrentOffsetMs().ToString();
         }
         
         private async void SearchButtonOnClick() { 
+            VrcUiPopupManager?.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
+                // "1","2",InputField.InputType.Standard,false,"3",Action<St
+                /*
             if (_inputField.text != "") { 
                 // TODO: fix clearing previous list 
                 //ClearResultList()
@@ -113,6 +127,7 @@ namespace VRCCC.QuickMenu
                     MelonLogger.Error($"Exception when trying to get new subtitles. {e}.");
                 }
             }
+            */
         }
         
         private void SetupResultAndSetParent(Subtitle subtitle) { 
@@ -127,7 +142,6 @@ namespace VRCCC.QuickMenu
                 } catch (Exception e) { 
                     MelonLogger.Error($"Exception when trying to create a result object {e}");
                 } 
-                
             }
         }
         
@@ -182,6 +196,9 @@ namespace VRCCC.QuickMenu
             string srtString = await SubtitlesApi.FetchSub(subtitle.SubDownloadLink);
             List<TimelineEvent> timelineEvents = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
             VRCCC.TrackedPlayers[0].UnsafeSwapTimeline(subtitle.MovieName, timelineEvents);
+        }
+        
+        private void InputFieldOnFocus(string change) { 
         }
         
     }
