@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Il2CppSystem;
 using MelonLoader;
+using UnityEngine.UI;
 using UnityEngine.Video;
 using IntPtr = System.IntPtr;
 
@@ -11,9 +12,11 @@ namespace VRCCC
     {
         private delegate void VideoPlayerInstanceDelegate(IntPtr instance);
         private delegate void VideoPlayerInstanceSetURLDelegate(IntPtr instance, IntPtr newUrl);
+        private delegate void InputFieldInstanceDelegate(IntPtr instance);
         
         private static VideoPlayerInstanceDelegate _onPlay, _onPause, _onStop;
         private static VideoPlayerInstanceSetURLDelegate _onSetURL;
+        private static InputFieldInstanceDelegate _onFocus;
 
         public static unsafe void SetupHooks()
         {
@@ -40,6 +43,12 @@ namespace VRCCC
                 BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
             MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(OnSetURL).Method.MethodHandle.GetFunctionPointer());
             _onSetURL = Marshal.GetDelegateForFunctionPointer<VideoPlayerInstanceSetURLDelegate>(*(IntPtr*) (void*) intPtr);
+            
+            // InputField OnFocus 
+            intPtr = (IntPtr) typeof(InputField).GetField("NativeMethodInfoPtr_OnFocus_Protected_Void_0",
+                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr>(OnFocus).Method.MethodHandle.GetFunctionPointer());
+            _onFocus = Marshal.GetDelegateForFunctionPointer<InputFieldInstanceDelegate>(*(IntPtr*) (void*) intPtr);
         }
 
         private static void OnPlay(IntPtr instance)
@@ -69,6 +78,12 @@ namespace VRCCC
             if (newURL == Il2CppSystem.IntPtr.Zero) return;
             var foundPlayer = VRCCC.TrackedPlayers.Find(player => player.Equals(instance));
             foundPlayer?.OnURLChange(new String(newURL));
+        }
+        
+        private static void OnFocus(IntPtr instance) 
+        {
+            MelonLogger.Msg("Focused an input field!");
+            _onFocus.Invoke(instance);
         }
     }
 }

@@ -116,7 +116,7 @@ namespace VRCCC.QuickMenu
                    if (s != "") 
                        DoSearch(s);
                 }), 
-                new Action(() => MelonLogger.Msg("Unknown action idk")),
+                new Action(() => MelonLogger.Msg("Cancel pressed")),
                 "Enter movie name...",
                 true, // close after press
                 new Action<VRCUiPopup> ( (s) => { MelonLogger.Msg("Search button clicked"); }),
