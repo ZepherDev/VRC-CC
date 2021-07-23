@@ -1,9 +1,12 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Il2CppSystem;
 using MelonLoader;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using VRCCC.QuickMenu;
 using IntPtr = System.IntPtr;
 
 namespace VRCCC
@@ -16,7 +19,7 @@ namespace VRCCC
         
         private static VideoPlayerInstanceDelegate _onPlay, _onPause, _onStop;
         private static VideoPlayerInstanceSetURLDelegate _onSetURL;
-        private static InputFieldInstanceDelegate _onFocus;
+        private static InputFieldInstanceDelegate _onSelect;
 
         public static unsafe void SetupHooks()
         {
@@ -44,11 +47,11 @@ namespace VRCCC
             MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(OnSetURL).Method.MethodHandle.GetFunctionPointer());
             _onSetURL = Marshal.GetDelegateForFunctionPointer<VideoPlayerInstanceSetURLDelegate>(*(IntPtr*) (void*) intPtr);
             
-            // InputField OnFocus 
-            intPtr = (IntPtr) typeof(InputField).GetField("NativeMethodInfoPtr_OnFocus_Protected_Void_0",
-                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr>(OnFocus).Method.MethodHandle.GetFunctionPointer());
-            _onFocus = Marshal.GetDelegateForFunctionPointer<InputFieldInstanceDelegate>(*(IntPtr*) (void*) intPtr);
+            // InputField onSelect
+            intPtr = (IntPtr) typeof(InputField).GetField("NativeMethodInfoPtr_OnSelect_Public_Virtual_Void_BaseEventData_0",
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Default).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr>(OnSelect).Method.MethodHandle.GetFunctionPointer());
+            _onSelect = Marshal.GetDelegateForFunctionPointer<InputFieldInstanceDelegate>(*(IntPtr*) (void*) intPtr);
         }
 
         private static void OnPlay(IntPtr instance)
@@ -80,10 +83,12 @@ namespace VRCCC
             foundPlayer?.OnURLChange(new String(newURL));
         }
         
-        private static void OnFocus(IntPtr instance) 
+        private static void OnSelect(IntPtr instance) 
         {
-            MelonLogger.Msg("Focused an input field!");
-            _onFocus.Invoke(instance);
+            MelonLogger.Msg("Selected an input field!");
+            _onSelect.Invoke(instance);
+            if (MainMenu._inputField != null && instance.Equals(MainMenu._inputField.Pointer)) 
+                MainMenu.GetMovieNameWithPopupKeyboard();
         }
     }
 }

@@ -21,12 +21,12 @@ namespace VRCCC.QuickMenu
         private Button _positiveSButton;
         
         private Text _currentOffsetText;
-        private InputField _inputField;
         private Subtitle _subtitle;
         
         private bool _initSucc = false;
         
-        private VRCUiPopupManager _vrcUiPopupManager;
+        public static InputField _inputField;
+        public static VRCUiPopupManager _vrcUiPopupManager;
         
         public MainMenu(Transform parentMenuTransform, AssetBundle bundle) { 
             GameObject menuPrefab = bundle.LoadAsset<GameObject>("Assets/AssetBundles/VRCCC-UI.prefab");
@@ -96,47 +96,24 @@ namespace VRCCC.QuickMenu
         }
         
         private async void OffsetButtonClick(int offset) { 
+            if (VRCCC.TrackedPlayers.Count <= 0) return;
             VRCCC.TrackedPlayers[0].IncrementOrDecrementOffset(offset);
             _currentOffsetText.text = VRCCC.TrackedPlayers[0].GetCurrentOffsetMs().ToString();
         }
         
         private async void SearchButtonOnClick() { 
-            if (_vrcUiPopupManager == null) { 
-                MelonLogger.Error("Unable to get the UIPopupManager!");
-                return;
-            }
-            _vrcUiPopupManager.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
-                "Search Subtitles",
-                "Movie Name",
-                InputField.InputType.Standard,
-                false, // numeric keypad
-                "Search",
-                new Action<string, Il2CppSystem.Collections.Generic.List<KeyCode>, Text>(async (s, list, arg3) => {
-                   _inputField.text = s;
-                   if (s != "") 
-                       DoSearch(s);
-                }), 
-                new Action(() => MelonLogger.Msg("Cancel pressed")),
-                "Enter movie name...",
-                true, // close after press
-                new Action<VRCUiPopup> ( (s) => { MelonLogger.Msg("Search button clicked"); }),
-                true, // idk
-                1024 // limit number of chars
-                );
-        }
-        
-        private async void DoSearch(String movieName) { 
-           // TODO: fix clearing previous list 
-           //ClearResultList()
-           MelonLogger.Msg($"Searching for {_inputField.text}");
-           try {
-               _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
-               MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
-               foreach (Subtitle subtitle in _subtitle.Alternatives.Take(6))
-                   SetupResultAndSetParent(subtitle);
-           } catch (Exception e) { 
-               MelonLogger.Error($"Exception when trying to get new subtitles. {e}.");
-           }
+            if (_inputField.text == "") return;
+               // TODO: fix clearing previous list 
+               //ClearResultList()
+               MelonLogger.Msg($"Searching for {_inputField.text}");
+               try {
+                   _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
+                   MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
+                   foreach (Subtitle subtitle in _subtitle.Alternatives.Take(6))
+                       SetupResultAndSetParent(subtitle);
+               } catch (Exception e) { 
+                   MelonLogger.Error($"Exception when trying to get new subtitles. {e}.");
+               }
         }
         
         private void SetupResultAndSetParent(Subtitle subtitle) { 
@@ -214,5 +191,32 @@ namespace VRCCC.QuickMenu
         private void InputFieldOnFocus(string change) { 
         }
         
+        public static void GetMovieNameWithPopupKeyboard() { 
+            if (_vrcUiPopupManager == null) { 
+                MelonLogger.Error("Unable to get the UIPopupManager!");
+                return;
+            }
+            GUI.FocusControl(null);
+            _vrcUiPopupManager.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
+                "Search Subtitles", // title
+                _inputField.text, // default value
+                InputField.InputType.Standard,
+                false, // numeric keypad
+                "Search", // OK button text
+                new Action<string, Il2CppSystem.Collections.Generic.List<KeyCode>, Text>(async (s, list, arg3) => {
+                   _inputField.text = s;
+                    GUI.FocusControl(null);
+                }), 
+                new Action(() => MelonLogger.Msg("Cancel pressed")),
+                "Enter movie name...", 
+                true, // close after OK
+                new Action<VRCUiPopup> ( (s) => { 
+                    MelonLogger.Msg("Opened or maybe search button clicked"); 
+                    GUI.FocusControl(null);
+                }),
+                false, // multiline/enter deselects input
+                1024 // char limit
+                );
+        }
     }
 }
