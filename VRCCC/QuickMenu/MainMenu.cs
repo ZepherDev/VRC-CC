@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -88,32 +91,32 @@ namespace VRCCC.QuickMenu
          */
         private void SetupStaticButtons() { 
             if (!_initSucc) return;
-            _searchButton.onClick.AddListener((Action) SearchButtonOnClick);
+            _searchButton.onClick.AddListener((Action) ( () => { MelonCoroutines.Start(DoSearch()); }));
             _negativeSButton.onClick.AddListener( (Action)    ( () => { OffsetButtonClick(-1000); }));
             _negativeHalfSButton.onClick.AddListener((Action) ( () => { OffsetButtonClick(-500); }));
             _positiveHalfSButton.onClick.AddListener((Action) ( () => { OffsetButtonClick(500); }));
             _positiveSButton.onClick.AddListener((Action)     ( () => { OffsetButtonClick(1000); }));
         }
         
-        private async void OffsetButtonClick(int offset) { 
+        private void OffsetButtonClick(int offset) { 
             if (VRCCC.TrackedPlayers.Count <= 0) return;
             VRCCC.TrackedPlayers[0].IncrementOrDecrementOffset(offset);
             _currentOffsetText.text = VRCCC.TrackedPlayers[0].GetCurrentOffsetMs().ToString();
         }
         
-        private async void SearchButtonOnClick() { 
-            if (_inputField.text == "") return;
-               // TODO: fix clearing previous list 
-               //ClearResultList()
-               MelonLogger.Msg($"Searching for {_inputField.text}");
-               try {
-                   _subtitle = await SubtitlesApi.QuerySubtitle(_inputField.text, true);
-                   MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
-                   foreach (Subtitle subtitle in _subtitle.Alternatives.Take(6))
-                       SetupResultAndSetParent(subtitle);
-               } catch (Exception e) { 
-                   MelonLogger.Error($"Exception when trying to get new subtitles. {e}.");
-               }
+        private IEnumerator DoSearch() { 
+            if (_inputField.text != "") {
+                ClearResultList();
+                
+                MelonLogger.Msg($"Searching for {_inputField.text}");
+                Task<Subtitle> task = SubtitlesApi.QuerySubtitle(_inputField.text, true);
+                yield return new WaitUntil((Func<bool>)(() => task.IsCompleted));
+
+                _subtitle = task.Result;
+                MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
+                foreach (Subtitle subtitle in _subtitle.Alternatives.Take(6))
+                    SetupResultAndSetParent(subtitle);
+            }
         }
         
         private void SetupResultAndSetParent(Subtitle subtitle) { 
@@ -133,9 +136,10 @@ namespace VRCCC.QuickMenu
         
         private void ClearResultList() { 
             if (!_initSucc) return;
-            // Leave the first item, which is used as a template and duplicated 
-            for (int x=_listContent.transform.childCount - 1; x>1; ++x)
-                GameObject.Destroy(_listContent.transform.GetChild(x).gameObject);
+            // TODO: Delete child game objects.
+            // foreach (var child in _listContent.transform) { 
+                // GameObject.Destroy(((Transform)child).gameObject);
+            // }
         }
        
         /**
@@ -159,7 +163,7 @@ namespace VRCCC.QuickMenu
                 if (text.name == "ResultText") { 
                     text.text = $"{subtitle.MovieName} " +
                                 $"{(subtitle.SubHearingImpaired ? "(Hearing Impaired)" : "")} " +
-                                $"({subtitle.Score}) ({subtitle.Score})";
+                                $"({subtitle.MovieYear})";
                     MelonLogger.Msg($"Setting result text to {text.text}");
                     break;
                 }
@@ -170,25 +174,22 @@ namespace VRCCC.QuickMenu
                 return null;
             }
             
-            button.onClick.AddListener((Action)(() => { SelectButtonClick(subtitle); }));
+            button.onClick.AddListener((Action)(() => { MelonCoroutines.Start(SelectButtonClick(subtitle)); }));
             newResult.gameObject.SetActive(true);
             
             return newResult;
         }
         
-        private async void SelectButtonClick(Subtitle subtitle) { 
-            if (subtitle == null) return;
-            if (VRCCC.TrackedPlayers.Count <= 0) { 
-                MelonLogger.Msg("Tried to start subtitles but couldn't find any players.");
-                return;
+        private IEnumerator SelectButtonClick(Subtitle subtitle) { 
+            if (subtitle != null && VRCCC.TrackedPlayers != null && VRCCC.TrackedPlayers.Count >= 0) { 
+                Task<string> task = SubtitlesApi.FetchSub(subtitle.SubDownloadLink);
+                yield return new WaitUntil((Func<bool>)(() => task.IsCompleted));
+                
+                string srtString = task.Result;
+                List<TimelineEvent> timelineEvents = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
+                // TODO: We need a way of knowing which TrackedPlayer is the right one
+                VRCCC.TrackedPlayers[0].UnsafeSwapTimeline(subtitle.MovieName, timelineEvents);
             }
-            
-            string srtString = await SubtitlesApi.FetchSub(subtitle.SubDownloadLink);
-            List<TimelineEvent> timelineEvents = SRTDecoder.DecodeSrtIntoTimelineEvents(srtString);
-            VRCCC.TrackedPlayers[0].UnsafeSwapTimeline(subtitle.MovieName, timelineEvents);
-        }
-        
-        private void InputFieldOnFocus(string change) { 
         }
         
         public static void GetMovieNameWithPopupKeyboard() { 
@@ -196,25 +197,30 @@ namespace VRCCC.QuickMenu
                 MelonLogger.Error("Unable to get the UIPopupManager!");
                 return;
             }
-            GUI.FocusControl(null);
-            _vrcUiPopupManager.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
+            
+            EventSystem.current.SetSelectedGameObject(null);
+             _vrcUiPopupManager.Method_Public_Void_String_String_InputType_Boolean_String_Action_3_String_List_1_KeyCode_Text_Action_String_Boolean_Action_1_VRCUiPopup_Boolean_Int32_0(
                 "Search Subtitles", // title
                 _inputField.text, // default value
                 InputField.InputType.Standard,
                 false, // numeric keypad
-                "Search", // OK button text
-                new Action<string, Il2CppSystem.Collections.Generic.List<KeyCode>, Text>(async (s, list, arg3) => {
+                "OK", // OK button text
+                
+                
+                new Action<string, Il2CppSystem.Collections.Generic.List<KeyCode>, Text>((s, list, arg3) => {
                    _inputField.text = s;
-                    GUI.FocusControl(null);
+                    EventSystem.current.SetSelectedGameObject(null);
                 }), 
-                new Action(() => MelonLogger.Msg("Cancel pressed")),
+                new Action(() => { 
+                    MelonLogger.Msg("Cancel pressed");
+                }),
                 "Enter movie name...", 
                 true, // close after OK
                 new Action<VRCUiPopup> ( (s) => { 
                     MelonLogger.Msg("Opened or maybe search button clicked"); 
-                    GUI.FocusControl(null);
+                    EventSystem.current.SetSelectedGameObject(null);
                 }),
-                false, // multiline/enter deselects input
+                false,// multiline/enter deselects input
                 1024 // char limit
                 );
         }
