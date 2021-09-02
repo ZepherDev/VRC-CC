@@ -19,7 +19,7 @@ namespace VRCCC
         public static readonly List<TrackedPlayer> TrackedPlayers = new List<TrackedPlayer>();
         public static readonly List<Action> MainThreadExecutionQueue = new List<Action>();
         private bool _shouldCheckUiManager;
-        private Type _uiManager;
+        public static Type _uiManager;
         private MethodInfo _uiManagerInstance;
         private Assembly _assemblyCSharp;
 
@@ -50,7 +50,7 @@ namespace VRCCC
         
         private static void UiManagerInit() { 
         }
-    
+        
         public override void OnUpdate() { 
             if (_shouldCheckUiManager) CheckUiManager();
             

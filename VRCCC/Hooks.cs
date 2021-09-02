@@ -87,8 +87,13 @@ namespace VRCCC
         {
             MelonLogger.Msg("Selected an input field!");
             _onSelect.Invoke(instance);
-            if (MainMenu._inputField != null && instance.Equals(MainMenu._inputField.Pointer)) 
-                MainMenu.GetMovieNameWithPopupKeyboard();
+            if (instance.Equals(MainMenu._inputField.Pointer)) { 
+                if (MainMenu._readyToOpenKeyboard &&
+                    MainMenu._inputField != null) {
+                    MainMenu.GetMovieNameWithPopupKeyboard();
+                    // MainMenu._readyToOpenKeyboard = false;
+                }
+            }
         }
     }
 }

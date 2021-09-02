@@ -22,16 +22,18 @@ namespace VRCCC
         private readonly VideoPlayer _storedPlayer;
         private object _coroutineToken;
 
-        private PlayerState _currentState;
+        public PlayerState currentState;
         private long _msOffset;
 
         private long CurrentTimeInMs => (long) Math.Round(_storedPlayer.time, 2)*1000;
         private Timeline _tl;
         
+        public string currentMovieName = "";
+        
         public TrackedPlayer(VideoPlayer original)
         {
             _storedPlayer = original;
-            _currentState = GetPlayerState(_storedPlayer);
+            currentState = GetPlayerState(_storedPlayer);
         }
         
         private static PlayerState GetPlayerState(VideoPlayer player)
@@ -59,8 +61,8 @@ namespace VRCCC
 
         public void OnStateChange(PlayerState newState)
         {
-            _currentState = newState;
-            if (_currentState == PlayerState.Play)
+            currentState = newState;
+            if (currentState == PlayerState.Play)
                 _coroutineToken = MelonCoroutines.Start(UpdateSubtitles());
             else if (_coroutineToken != null) 
                 MelonCoroutines.Stop(_coroutineToken);
@@ -78,6 +80,7 @@ namespace VRCCC
             _tl = new Timeline(timelineEvents);
             VRCCC.MainThreadExecutionQueue.Add(() => MelonCoroutines.Start(
                 UITextArea.DisplayAlert($"Starting Subtitle Playback for: {movieName}", 3)));
+            currentMovieName = movieName;
         }
         
         /**
@@ -87,6 +90,7 @@ namespace VRCCC
             _tl = new Timeline(timelineEvents);
             VRCCC.MainThreadExecutionQueue.Add(() => MelonCoroutines.Start(
                 UITextArea.DisplayAlert($"Starting Subtitle Playback for: {movieName}", 3)));
+            currentMovieName = movieName;
         }
 
         /**
@@ -111,7 +115,7 @@ namespace VRCCC
         {
             while (_storedPlayer != null)
             {
-                if (_tl != null && _currentState == PlayerState.Play)
+                if (_tl != null && currentState == PlayerState.Play)
                 {
                     UITextArea.ToggleUI(true);
                     List<TimelineEvent> events = _tl.ScrubToTime(CurrentTimeInMs + _msOffset);

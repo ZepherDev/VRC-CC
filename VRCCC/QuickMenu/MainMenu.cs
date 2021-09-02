@@ -21,13 +21,18 @@ namespace VRCCC.QuickMenu
         private Button _negativeHalfSButton;
         private Button _positiveHalfSButton;
         private Button _positiveSButton;
+        private Button _onButton;
+        private Button _offButton;
         
         private Text _currentOffsetText;
+        private Text _currentSubName;
         private Subtitle _subtitle;
         
         private bool _initSucc = false;
         
         public static InputField _inputField;
+        private static InputField _dummyInputField; // works around a focus bug with the keyboard popping up
+        public static bool _readyToOpenKeyboard = true;
         
         public MainMenu(Transform parentMenuTransform, AssetBundle bundle) { 
             GameObject menuPrefab = bundle.LoadAsset<GameObject>("Assets/AssetBundles/VRCCC-UI.prefab");
@@ -48,6 +53,15 @@ namespace VRCCC.QuickMenu
             MelonLogger.Msg("UI: set up buttons and finished init");
         }
         
+        public void OnOpen() { 
+            if (VRCCC.TrackedPlayers.Count <= 0) return;
+            if (VRCCC.TrackedPlayers[0].currentState == TrackedPlayer.PlayerState.Stop) { 
+                _currentSubName.text = "(none)";
+            } else {
+                _currentSubName.text = VRCCC.TrackedPlayers[0].currentMovieName;
+            }
+        }
+        
         private void InitReferences() { 
             try { 
                 Button[] items = _menuObject.GetComponentsInChildren<Button>();
@@ -57,12 +71,17 @@ namespace VRCCC.QuickMenu
                     if (button.name == "NegativeHalfS") { _negativeHalfSButton = button; continue; }
                     if (button.name == "PositiveHalfS") { _positiveHalfSButton = button; continue; }
                     if (button.name == "PositiveS")     { _positiveSButton = button; }
+                    if (button.name == "OnButton")      { _onButton = button; }
+                    if (button.name == "OffButton")     { _offButton = button; }
                 }
                 Text[] texts = _menuObject.GetComponentsInChildren<Text>();
-                foreach (Text text in texts) 
+                foreach (Text text in texts) {
                     if (text.name == "CurrentOffset")   { _currentOffsetText = text; }
+                    if (text.name == "CurrentSubName")  { _currentSubName = text; }
+                }
                 
                 _inputField = _menuObject.GetComponentInChildren<InputField>();
+                _dummyInputField = new GameObject().AddComponent<InputField>();
                 
                 _listContent = new ResultList(_menuObject.transform.Find(
                     "Pages/MainPage/ResultsArea/ScrollList/ListViewport/ListContent"), _menuObject.transform.Find(
@@ -93,16 +112,20 @@ namespace VRCCC.QuickMenu
             _negativeHalfSButton.onClick.AddListener((Action) ( () => { OffsetButtonClick(-500); }));
             _positiveHalfSButton.onClick.AddListener((Action) ( () => { OffsetButtonClick(500); }));
             _positiveSButton.onClick.AddListener((Action)     ( () => { OffsetButtonClick(1000); }));
+            _onButton.onClick.AddListener((Action)            ( () => { 
+                VRCCC.TrackedPlayers[0].currentState = TrackedPlayer.PlayerState.Play; }));
+            _offButton.onClick.AddListener((Action)           ( () => {
+                VRCCC.TrackedPlayers[0].currentState = TrackedPlayer.PlayerState.Stop; }));
+                
         }
         
         private void OffsetButtonClick(int offset) { 
             if (VRCCC.TrackedPlayers.Count <= 0) return;
             VRCCC.TrackedPlayers[0].IncrementOrDecrementOffset(offset);
-            _currentOffsetText.text = VRCCC.TrackedPlayers[0].GetCurrentOffsetMs().ToString();
+            _currentOffsetText.text = (VRCCC.TrackedPlayers[0].GetCurrentOffsetMs()/1000) + "s";
         }
         
-        private IEnumerator DoSearch()
-        {
+        private IEnumerator DoSearch() {
             if (_inputField.text == "") yield break;
             ClearResultList();
                 
@@ -112,13 +135,15 @@ namespace VRCCC.QuickMenu
 
             _subtitle = task.Result;
             MelonLogger.Msg($"{_subtitle.Alternatives.Count} results in the list of alternatives.");
-            foreach (Subtitle subtitle in _subtitle.Alternatives.Take(6))
+            foreach (Subtitle subtitle in _subtitle.Alternatives.Take(12))
                 _listContent.Add(subtitle);
         }
         
-        private void ClearResultList() { 
+        private void ClearResultList() {
             if (!_initSucc) return;
-            _listContent.Clear();
+            if (_listContent.Count > 2) { 
+                _listContent.RemoveRange(1, _listContent.Count - 1);
+            }
         }
         
         public static IEnumerator SelectButtonClick(Subtitle subtitle)
@@ -135,12 +160,23 @@ namespace VRCCC.QuickMenu
         }
         
         public static void GetMovieNameWithPopupKeyboard() {
-            
-            EventSystem.current.SetSelectedGameObject(null);
-            PopupManager.CreateKeyboardPopup("Search Subtitles", _inputField.text, InputField.InputType.Standard, false, "OK", s => {
-                _inputField.text = s;
-                EventSystem.current.SetSelectedGameObject(null);
-            }, () => MelonLogger.Msg("Cancel Pressed"), "Enter Movie Name", true);
+            try { 
+                VRCCC._uiManager.GetMethod("Method_Public_Void_Boolean_Boolean_1").Invoke(
+                    VRCUiManager.prop_VRCUiManager_0, new object[2] { false, true });
+            } catch (Exception e) { 
+                MelonLogger.Error("Error while trying to show the settings page. {}", e);
+                return;
+            }
+            PopupManager.CreateKeyboardPopup("Search Subtitles", _inputField.text, 
+                InputField.InputType.Standard, 
+                false, 
+                "OK",
+                s => {
+                    _inputField.text = s;
+                    VRCCC._uiManager.GetMethod("Method_Public_Void_Boolean_Boolean_1").Invoke(
+                        VRCUiManager.prop_VRCUiManager_0, new object[2] { false, true });
+                },
+                () => MelonLogger.Msg("Cancel Pressed"), "Enter Movie Name", true);
         }
     }
 }

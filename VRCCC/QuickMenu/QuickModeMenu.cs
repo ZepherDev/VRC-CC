@@ -41,6 +41,7 @@ namespace VRCCC.QuickMenu
             List<GameObject> existingTabs = _qmTabManager.field_Public_ArrayOf_GameObject_0.ToList();
             global::QuickMenu quickMenu = Resources.FindObjectsOfTypeAll<global::QuickMenu>()[0];
             
+            
             // Tab
             var quickModeTabs = quickMenu.transform.Find("QuickModeTabs").
                 GetComponent<MonoBehaviourPublicObCoGaCoObCoObCoUnique>();
@@ -84,6 +85,7 @@ namespace VRCCC.QuickMenu
             {
                 global::QuickMenu.prop_QuickMenu_0.field_Private_GameObject_6.SetActive(false);
                 global::QuickMenu.prop_QuickMenu_0.field_Private_GameObject_6 = newMenu.gameObject;
+                MainMenu.OnOpen();
                 newMenu.gameObject.SetActive(true);
             }));
             newTab.transform.FindChild("Badge").gameObject.SetActive(false);

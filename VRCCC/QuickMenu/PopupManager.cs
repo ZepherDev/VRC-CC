@@ -7,7 +7,7 @@ namespace VRCCC.QuickMenu
     public static class PopupManager
     {
         private static VRCUiPopupManager _popupManager => VRCUiPopupManager.prop_VRCUiPopupManager_0;
-
+        
         public static void CreateKeyboardPopup(string title, string defaultValue, InputField.InputType inputType,
             bool useNumeric, string submitButtonText, Action<string> onSubmitted, Action onCancelled,
             string initialText,
