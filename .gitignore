@@ -2,3 +2,8 @@
 /VRCCCTest/obj
 /VRCCCTest/bin
 
+.idea
+_vimrc
+obj
+bin
+packages
