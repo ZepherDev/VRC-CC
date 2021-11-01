@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using MelonLoader;
 using UnityEngine.Video;
 using VRCCC.QuickMenu;
 using UnityEngine;
+using UnityEngine.UI;
+using VRCCC.MainMenu;
 using Object = UnityEngine.Object;
 
 [assembly: MelonInfo(typeof(VRCCC.VRCCC), "VRC Closed Captions", "1.0",
@@ -48,17 +51,36 @@ namespace VRCCC
         
         //public override void VRChat_OnUiManagerInit() => UiManagerInit();
         
-        private static void UiManagerInit() { 
+        private static void UiManagerInit() {
+            var a = Assembly.GetExecutingAssembly();
+            using (Stream resFilestream = a.GetManifestResourceStream("VRCCC.vrcccmainmenu")) {
+                var ba = new byte[resFilestream.Length];
+                resFilestream.Read(ba, 0, ba.Length);
+                var bundle = AssetBundle.LoadFromMemory(ba);
+                var mainPrefab = bundle.LoadAsset<GameObject>("assets/vrc-cc.prefab");
+                var menuContent = GameObject.Find("UserInterface/MenuContent");
+                var parent = menuContent.transform.FindChild("Screens");
+                var newScreen = GameObject.Instantiate(mainPrefab, parent);
+                newScreen.transform.localPosition = new Vector3(-0.0586f, -0.0086f, 0.045f);
+                newScreen.AddComponent<MainMenuTab>();
+                newScreen.SetActive(false);
+                newScreen.name = "VRC-CC";
+                var menuTabs = menuContent.transform.FindChild("Backdrop/Header/Tabs/ViewPort/Content");
+                var safetyTab = menuTabs.Find("SafetyPageTab");
+                var newTab = GameObject.Instantiate(safetyTab, menuTabs); // Yoink
+                newTab.name = "VRC-CC";
+                newTab.SetSiblingIndex(newTab.GetSiblingIndex()-1);
+                newTab.FindChild("Button/Text").GetComponent<Text>().text = "VRC-CC";
+                newTab.GetComponent<VRCUiPageTab>().field_Public_String_1 = "UserInterface/MenuContent/Screens/VRC-CC";
+            }
         }
         
         public override void OnUpdate() { 
             if (_shouldCheckUiManager) CheckUiManager();
             
-            /*
-            if (QuickModeMenu.MainMenu != null && QuickModeMenu.IsMenuShown) 
-                QuickModeMenu.MainMenu.Update();
-            */
-            
+            //if (QuickModeMenu.MainMenu != null && QuickModeMenu.IsMenuShown) 
+            //    QuickModeMenu.MainMenu.Update();
+
             if (MainThreadExecutionQueue.Count <= 0) return;
             
             MainThreadExecutionQueue[0].Invoke();
