@@ -108,6 +108,7 @@
         <Compile Include="Subtitle.cs" />
         <Compile Include="SubtitlesApi.cs" />
         <Compile Include="Timeline.cs" />
+        <Compile Include="TimelineEvent.cs" />
         <Compile Include="UITextArea.cs" />
         <Compile Include="VideoUri.cs" />
     </ItemGroup>
