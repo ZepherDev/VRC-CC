@@ -14,4 +14,14 @@
 	<s:Boolean x:Key="/Default/AddReferences/RecentPaths/=D_003A_005CSteamLibrary_005Csteamapps_005Ccommon_005CVRChat_005CMelonLoader_005CMelonLoader_002Edll/@EntryIndexedValue">True</s:Boolean>
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\Ben\RiderProjects\VRCCC\packages\DeepSpeech-GPU.0.10.0-alpha.3\lib\net47\DeepSpeechClient.dll" /&gt;&#xD;
-&lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>
+  &lt;Assembly Path="D:\Games\Steam\steamapps\common\VRChat\MelonLoader\Managed\VRCCore-Editor.dll" /&gt;&#xD;
+  &lt;PhysicalFolder Path="D:\Games\Steam\steamapps\common\VRChat\MelonLoader\Managed" Loaded="True" /&gt;&#xD;
+  &lt;Assembly Path="D:\Games\Steam\steamapps\common\VRChat\MelonLoader\Managed\VRCCore-Standalone.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\dan\Downloads\Assembly-CSharp.dll" /&gt;&#xD;
+  &lt;Assembly Path="D:\git\Harmony.2.1.0.0\net472\0Harmony.dll" /&gt;&#xD;
+  &lt;Assembly Path="D:\Games\Steam\steamapps\common\VRChat\MelonLoader\Managed\UnityEngine.CoreModule.dll" /&gt;&#xD;
+  &lt;Assembly Path="D:\Unity\Hub\Editor\2020.1.10f1\Editor\Data\PlaybackEngines\windowsstandalonesupport\Variations\win32_development_mono\Data\Managed\UnityEngine.CoreModule.dll" /&gt;&#xD;
+&lt;/AssemblyExplorer&gt;</s:String>
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/CustomBuildToolPath/@EntryValue">C:\Program Files\JetBrains\JetBrains Rider 212.4037.61\tools\MSBuild\Current\Bin\MSBuild.exe</s:String>
+	<s:Int64 x:Key="/Default/Environment/Hierarchy/Build/BuildTool/MsbuildVersion/@EntryValue">1048576</s:Int64>
+	</wpf:ResourceDictionary>
