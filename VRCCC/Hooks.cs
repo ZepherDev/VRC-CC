@@ -48,10 +48,12 @@ namespace VRCCC
             _onSetURL = Marshal.GetDelegateForFunctionPointer<VideoPlayerInstanceSetURLDelegate>(*(IntPtr*) (void*) intPtr);
             
             // InputField onSelect
+            /*
             intPtr = (IntPtr) typeof(InputField).GetField("NativeMethodInfoPtr_OnSelect_Public_Virtual_Void_BaseEventData_0",
                 BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Default).GetValue(null);
             MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr>(OnSelect).Method.MethodHandle.GetFunctionPointer());
             _onSelect = Marshal.GetDelegateForFunctionPointer<InputFieldInstanceDelegate>(*(IntPtr*) (void*) intPtr);
+            */
         }
 
         private static void OnPlay(IntPtr instance)
