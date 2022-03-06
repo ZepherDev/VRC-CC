@@ -5,10 +5,8 @@ using System.Linq;
 using System.Reflection;
 using MelonLoader;
 using UnityEngine.Video;
-using VRCCC.QuickMenu;
 using UnityEngine;
 using UnityEngine.UI;
-using VRCCC.MainMenu;
 using Object = UnityEngine.Object;
 
 [assembly: MelonInfo(typeof(VRCCC.VRCCC), "VRC Closed Captions", "1.0",
@@ -44,8 +42,8 @@ namespace VRCCC
         }
         
         public override void OnSceneWasLoaded(int level, string levelName) { 
-            if (level == -1) 
-                QuickModeMenu.InitIfNeeded();
+            // if (level == -1) 
+                // QuickModeMenu.InitIfNeeded();
         }
 
         
@@ -62,7 +60,7 @@ namespace VRCCC
                 var parent = menuContent.transform.FindChild("Screens");
                 var newScreen = GameObject.Instantiate(mainPrefab, parent);
                 newScreen.transform.localPosition = new Vector3(-0.0586f, -0.0086f, 0.045f);
-                newScreen.AddComponent<MainMenuTab>();
+                // newScreen.AddComponent<MainMenuTab>();
                 newScreen.SetActive(false);
                 newScreen.name = "VRC-CC";
                 var menuTabs = menuContent.transform.FindChild("Backdrop/Header/Tabs/ViewPort/Content");
@@ -107,7 +105,7 @@ namespace VRCCC
                 return;
             
             _shouldCheckUiManager = false;
-            UiManagerInit();
+            // UiManagerInit();
         }
     }
 }

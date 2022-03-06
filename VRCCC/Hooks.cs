@@ -1,9 +1,13 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Il2CppSystem;
 using MelonLoader;
+using UnhollowerBaseLib;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using VRC.SDK3.Internal.Video.Components.AVPro;
+using VRC.SDK3.Video.Components.AVPro;
 using VRCCC.QuickMenu;
 using IntPtr = System.IntPtr;
 
@@ -45,6 +49,65 @@ namespace VRCCC
             MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr, IntPtr>(OnSetURL).Method.MethodHandle.GetFunctionPointer());
             _onSetURL = Marshal.GetDelegateForFunctionPointer<VideoPlayerInstanceSetURLDelegate>(*(IntPtr*) (void*) intPtr);
             
+            
+            intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_LoadURL_Public_Virtual_Void_VRCUrl_0",
+                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr, IntPtr>(Debug).Method.MethodHandle.GetFunctionPointer());
+            
+            /*
+            try { 
+                intPtr = *(IntPtr*)(IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_LoadURL_Public_Virtual_Void_VRCUrl_0",
+                    BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+                MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(Debug).Method.MethodHandle.GetFunctionPointer());
+                
+                if (intPtr == IntPtr.Zero) { 
+                    MelonLogger.Warning("Failed to hook LoadURL again!");
+                }
+            } catch (System.Exception e) { 
+                MelonLogger.Error(e);
+            }
+            */
+            
+            intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_PlayURL_Public_Virtual_Void_VRCUrl_0",
+                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(Debug2).Method.MethodHandle.GetFunctionPointer());
+            
+            intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_Play_Public_Virtual_Void_0",
+                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(Debug3).Method.MethodHandle.GetFunctionPointer());
+            
+            intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_Pause_Public_Virtual_Void_0",
+                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(Debug4).Method.MethodHandle.GetFunctionPointer());
+
+            MelonLogger.Msg("Attempting to hook AVProVideoPlayer");
+            try {
+                FieldInfo fi =
+                    UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(
+                        typeof(VRCAVProVideoPlayer).GetMethods().First(it => 
+                            it.Name == nameof(VRCAVProVideoPlayer.LoadURL) && 
+                            it.GetParameters().Length == 1));
+                if (fi != null) {
+                    MelonLogger.Msg("fi: " + fi);
+                    intPtr = (IntPtr) fi.GetValue(null);
+                    MelonUtils.NativeHookAttach(intPtr,
+                        new System.Action<IntPtr, IntPtr>(Debug5).Method.MethodHandle.GetFunctionPointer());
+                    MelonUtils.NativeHookAttach(intPtr,
+                        new System.Action<IntPtr, IntPtr, IntPtr>(Debug6).Method.MethodHandle.GetFunctionPointer());
+                    MelonUtils.NativeHookAttach(intPtr,
+                        new System.Action<IntPtr, IntPtr, IntPtr, IntPtr>(Debug7).Method.MethodHandle.GetFunctionPointer());
+                }
+                else {
+                    MelonLogger.Error("Failed to get field info for LoadUrl!");
+                }
+            }
+            catch (System.Exception e) {
+                MelonLogger.Error(e);
+            }
+              
+            intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_Stop_Public_Virtual_Void_0",
+                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(Debug5).Method.MethodHandle.GetFunctionPointer()); 
             // InputField onSelect
             /*
             intPtr = (IntPtr) typeof(InputField).GetField("NativeMethodInfoPtr_OnSelect_Public_Virtual_Void_BaseEventData_0",
@@ -88,5 +151,35 @@ namespace VRCCC
             MelonLogger.Msg("Selected an input field!");
             _onSelect.Invoke(instance, methodInfo);
         }
+        
+        
+        private static void Debug(IntPtr instance, IntPtr newUrl, IntPtr methodInfo) { 
+            MelonLogger.Warning("Debug called");
+        }
+        
+        private static void Debug2(IntPtr instance, IntPtr methodInfo) { 
+            MelonLogger.Warning("Debug 2 called");
+        }
+        
+        private static void Debug3(IntPtr instance, IntPtr methodInfo) { 
+            MelonLogger.Warning("Debug 3 called");
+        }
+        
+        private static void Debug4(IntPtr instance, IntPtr methodInfo) { 
+            MelonLogger.Warning("Debug 4 called");
+        }
+        
+        private static void Debug5(IntPtr instance, IntPtr methodInfo) { 
+            MelonLogger.Warning("Debug 5 called");
+        }
+        
+        private static void Debug6(IntPtr instance, IntPtr newUrl, IntPtr methodInfo) { 
+            MelonLogger.Warning("Debug 6 called");
+        }
+        private static void Debug7(IntPtr instance, IntPtr newUrl, IntPtr methodInfo, IntPtr a) { 
+            MelonLogger.Warning("Debug 7 called");
+        }
+            
+            
     }
 }
