@@ -67,10 +67,10 @@ namespace VRCCC
                 MelonLogger.Error(e);
             }
             */
-            
-            intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_PlayURL_Public_Virtual_Void_VRCUrl_0",
-                BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-            MelonUtils.NativeHookAttach(intPtr, new System.Action<IntPtr, IntPtr>(Debug2).Method.MethodHandle.GetFunctionPointer());
+            intPtr = *(IntPtr*)(IntPtr)UnhollowerUtils
+                .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(
+                    typeof(VRCAVProVideoPlayer).GetMethod(nameof(VRCAVProVideoPlayer.Play))).GetValue(null);
+            MelonUtils.NativeHookAttach((IntPtr)(&intPtr), new System.Action<IntPtr, IntPtr>(Debug2).Method.MethodHandle.GetFunctionPointer());
             
             intPtr = (IntPtr) typeof(VRCAVProVideoPlayer).GetField("NativeMethodInfoPtr_Play_Public_Virtual_Void_0",
                 BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
