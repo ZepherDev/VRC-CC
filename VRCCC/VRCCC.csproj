@@ -137,6 +137,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="GenericPlayer.cs" />
         <Compile Include="Hooks.cs" />
         <Compile Include="Main.cs" />
         <Compile Include="SRTDecoder.cs" />

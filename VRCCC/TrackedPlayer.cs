@@ -7,41 +7,37 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.Video;
 using VRC.SDK.Internal.ModularPieces;
+using VRC.SDK3.Video.Components.AVPro;
 
 namespace VRCCC
 {
-    public class TrackedPlayer : IDisposable
-    {
-        public enum PlayerState
-        {
+    public class TrackedPlayer : IDisposable { 
+        public enum PlayerState { 
             Play,
             Pause,
-            Stop
+            Stop,
+            Unknown
         }
         
-        private readonly VideoPlayer _storedPlayer;
+        private readonly GenericPlayer _storedPlayer;
         private object _coroutineToken;
 
         public PlayerState currentState;
         private long _msOffset;
 
-        private long CurrentTimeInMs => (long) Math.Round(_storedPlayer.time, 2)*1000;
+        private long CurrentTimeInMs => (long) Math.Round(_storedPlayer.GetTime(), 2)*1000;
         private Timeline _tl;
         
         public string currentMovieName = "";
         
-        public TrackedPlayer(VideoPlayer original)
-        {
-            _storedPlayer = original;
-            currentState = GetPlayerState(_storedPlayer);
+        public TrackedPlayer(VideoPlayer original) { 
+            _storedPlayer = new GenericPlayer(original);
+            currentState = _storedPlayer.GetPlayerState();
         }
         
-        private static PlayerState GetPlayerState(VideoPlayer player)
-        {
-            var state = PlayerState.Stop;
-            if (player.isPlaying) state = PlayerState.Play;
-            if (player.isPaused) state = PlayerState.Pause;
-            return state;
+        public TrackedPlayer(VRCAVProVideoPlayer original) { 
+            _storedPlayer = new GenericPlayer(original);
+            currentState = _storedPlayer.GetPlayerState();
         }
         
         /**
@@ -140,7 +136,7 @@ namespace VRCCC
             }
         }
 
-        public bool Equals(IntPtr playerPtr) => playerPtr == _storedPlayer.Pointer;
+        public bool Equals(IntPtr playerPtr) => _storedPlayer.Equals(playerPtr);
 
         ~TrackedPlayer() => Dispose();
 

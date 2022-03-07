@@ -7,6 +7,7 @@ using MelonLoader;
 using UnityEngine.Video;
 using UnityEngine;
 using UnityEngine.UI;
+using VRC.SDK3.Video.Components.AVPro;
 using Object = UnityEngine.Object;
 
 [assembly: MelonInfo(typeof(VRCCC.VRCCC), "VRC Closed Captions", "1.0",
@@ -37,8 +38,15 @@ namespace VRCCC
                 lingeringPlayer.Dispose();
             TrackedPlayers.Clear();
             
-            foreach (var discoveredPlayer in Object.FindObjectsOfType<VideoPlayer>())
+            foreach (var discoveredPlayer in Object.FindObjectsOfType<VideoPlayer>()) {
+                MelonLogger.Msg("Discovered VideoPlayer");
                 TrackedPlayers.Add(new TrackedPlayer(discoveredPlayer));
+            }
+                
+            foreach (var discoveredPlayer in Object.FindObjectsOfType<VRCAVProVideoPlayer>()) { 
+                MelonLogger.Msg("Found VRC AVPro Video Player");
+                TrackedPlayers.Add(new TrackedPlayer(discoveredPlayer));
+            }
         }
         
         public override void OnSceneWasLoaded(int level, string levelName) { 
