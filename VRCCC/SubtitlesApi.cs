@@ -77,6 +77,8 @@ namespace VRCCC {
                     MelonLogger.Error("An exception occurred while trying to fetch or decode a subtitle file! " + e);
                 }
             }
+            MelonLogger.Error("CompressedMs is still null.");
+            if (compressedMs == null) return srtString;
             try {
                 compressedMs.Seek(0,0);
                 var decompressedMs = new MemoryStream();

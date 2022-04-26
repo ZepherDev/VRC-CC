@@ -111,25 +111,29 @@ namespace VRCCC
         {
             while (_storedPlayer != null)
             {
-                if (_tl != null && currentState == PlayerState.Play)
-                {
-                    UITextArea.ToggleUI(true);
-                    List<TimelineEvent> events = _tl.ScrubToTime(CurrentTimeInMs + _msOffset);
-                    // Large gaps in time (resync, lag, a big seek) can result in a massive list of missed events.
-                    // To prevent this, we only care about the two most recent events
-                    if (events.Count > 2) 
-                        events.RemoveRange(0, events.Count - 3);
-                    
-                    foreach (var eventObj in events.Where(eventObj => !eventObj.eventText.Contains("OpenSubtitles")))
+                try {
+                    if (_tl != null && currentState == PlayerState.Play)
                     {
-                        MelonLogger.Msg(eventObj.eventText);
-                        UITextArea.Text = eventObj.eventText;
+                        UITextArea.ToggleUI(true);
+                        List<TimelineEvent> events = _tl.ScrubToTime(CurrentTimeInMs + _msOffset);
+                        // Large gaps in time (resync, lag, a big seek) can result in a massive list of missed events.
+                        // To prevent this, we only care about the two most recent events
+                        if (events.Count > 2) 
+                            events.RemoveRange(0, events.Count - 3);
+                        
+                        foreach (var eventObj in events.Where(eventObj => !eventObj.eventText.Contains("OpenSubtitles")))
+                        {
+                            MelonLogger.Msg(eventObj.eventText);
+                            UITextArea.Text = eventObj.eventText;
+                        }
                     }
-                }
-                else
-                {
-                    UITextArea.Text = "";
-                    UITextArea.ToggleUI(false);
+                    else
+                    {
+                        UITextArea.Text = "";
+                        UITextArea.ToggleUI(false);
+                    }
+                } catch (Exception e) {
+                    MelonLogger.Error("Error in UpdateSubtitles", e);
                 }
 
                 yield return new WaitForSeconds(0.5f);

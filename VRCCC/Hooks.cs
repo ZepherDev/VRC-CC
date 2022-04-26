@@ -2,8 +2,10 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Il2CppSystem;
+using Il2CppSystem.Collections.Generic;
 using MelonLoader;
 using UnhollowerBaseLib;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using VRC.SDK3.Internal.Video.Components.AVPro;
@@ -92,8 +94,9 @@ namespace VRCCC
                     typeof(VRCAVProVideoPlayer).GetMethod(nameof(VRCAVProVideoPlayer.LoadURL))).GetValue(null);
             MelonUtils.NativeHookAttach((IntPtr)(&intPtr), new System.Action<IntPtr, IntPtr, IntPtr>(AVProLoadURL).Method.MethodHandle.GetFunctionPointer());
             _AVPOnLoadURL = (AVProInstanceLoadURLDelegate)Marshal.GetDelegateForFunctionPointer(intPtr, typeof(AVProInstanceLoadURLDelegate));
+            
         }
-
+        
         private static void OnPlay(IntPtr instance, IntPtr methodInfo)
         {
             _onPlay.Invoke(instance, methodInfo);
