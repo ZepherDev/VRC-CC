@@ -147,7 +147,7 @@ namespace VRCCC
         public void Dispose()
         {
             UITextArea.Text = "";
-            if (_coroutineToken != null) MelonCoroutines.Stop(_coroutineToken);
+            // if (_coroutineToken != null) MelonCoroutines.Stop(_coroutineToken);
         }
     }
 }

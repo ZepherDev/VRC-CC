@@ -28,7 +28,7 @@ namespace VRCCC
         static UITextArea()
         {
             // Hippity Hoppity, your UI elements are now my property
-            var baseUserInterface = GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud").transform;
+            var baseUserInterface = GameObject.Find("UserInterface/UnscaledUI/HudContent_Old/Hud").transform;
             TextParent = Object.Instantiate(baseUserInterface.FindChild("AlertTextParent"), baseUserInterface); 
             
             TextParent.name = "VRCCC Text";
